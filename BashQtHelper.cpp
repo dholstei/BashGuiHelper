@@ -9,27 +9,20 @@
 #include <QtWidgets/QTreeView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
-#include <QtGui/QStandardItem>
-#include <QtGui/QStandardItemModel>
 #include <string>
 #include <iostream>
 #include <map>
 #include <stdio.h>
+#include "LibXML2.h"
 
 #define ERROR() return 1
 
+#include <QtGui/QStandardItem>
+#include <QtGui/QStandardItemModel>
 class SelectionListDialog : public QDialog
 {
 public:
-    SelectionListDialog(QWidget *parent = nullptr)
-        : QDialog(parent)
-    {
-        setupUi();
-    }
-
-private:
-    void setupUi()
-    {
+    SelectionListDialog(QWidget *parent = nullptr, char* items=nullptr) {
         // Create the main layout.
         QVBoxLayout *mainLayout = new QVBoxLayout();
 
@@ -37,9 +30,12 @@ private:
         QTreeView *treeView = new QTreeView();
         QStandardItemModel *model = new QStandardItemModel();
         QStandardItem *rootItem = model->invisibleRootItem();
-        rootItem->appendRow(new QStandardItem("Item 1"));
-        rootItem->appendRow(new QStandardItem("Item 2"));
-        rootItem->appendRow(new QStandardItem("Item 3"));
+
+
+        char* token; token = strtok((char*) items, "\t");
+        while( token != NULL ) {
+            rootItem->appendRow(new QStandardItem(token)); token = strtok(NULL, "\t");}
+
         treeView->setModel(model);
 
         // Create the push button.
@@ -74,6 +70,7 @@ private:
     // The label that will display the selected items.
     QLabel *label;
 };
+
 
 int main(int argc, char *argv[])
 {
@@ -111,18 +108,44 @@ int main(int argc, char *argv[])
             std::cout<< "\n"; return 0;}
         else ERROR();}
 
-    if (ArgList["type"].compare("selection") == 0) {
-        QDialog dialog(mainWindow); dialog.setWindowTitle(ArgList["title"].c_str());
-        QVBoxLayout layout = QVBoxLayout();
+    if (ArgList["type"].compare("selection") == 0) {        
+        auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
+        dialog.setWindowTitle(ArgList["title"].c_str());
         if (dialog.exec()) {
             std::cout<< "\n"; return 0;}
-        // else ERROR();
+        else ERROR();
+        }
 
-        // Create the dialog.
-        SelectionListDialog ndialog;
-
-        // Show the dialog.
-        ndialog.exec();
+    if (ArgList["type"].compare("tree") == 0) {
+        if (ArgList["xml"].length())
+        {
+            auto doc = xDoc(ArgList["xml"].c_str(), "1.0", 0);
+            if (doc.err)
+            {   // turn into macro
+                std::cerr << "ERROR: " << doc.err->msg->c_str();
+                if (doc.err->src) std::cerr << "SRC: " << doc.err->src->c_str() << "\n";
+                return 1;
+            }
+            
+            XPathObj n = XPathObj(doc.ptr, (xmlChar*) "count(/selection/*)>2");
+            // n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[1])");
+            n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+            if (n.err)
+            {   // turn into macro
+                std::cerr << "ERROR: " << n.err->msg->c_str();
+                if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
+                if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
+                return 1;
+            }
+            auto i = n.Nodes();
+            xNode r = doc.RootNode();
+        }
+        
+        auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
+        dialog.setWindowTitle(ArgList["title"].c_str());
+        if (dialog.exec()) {
+            std::cout<< "\n"; return 0;}
+        else ERROR();
         }
 
     else {std::cerr << "No GUI type chosen\n"; ERROR();}
