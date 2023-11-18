@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Build/Run (Debug)",
+      "type": "cppdbg",
+      "preLaunchTask": "C/C++: Debug Build",
+      "request": "launch",
+      "args": ["--type=tree", "--title=long title", 
+        "--desc=long desc", "--directory=$HOME/src", "--file_type=Image Files (*.png *.jpg *.bmp)",
+        "--items=Item 1\tItem 2\tItem 3 and a half", "--xml=/home/danny/src/BashQtHelper/selection.xml"],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/home/danny/src/BashQtHelper",
+      "program": "/home/danny/src/BashQtHelper/debug/BashQtHelper",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "C/C++ Build/Run (release)",
+      "type": "cppdbg",
+      "preLaunchTask": "C/C++: Release Build",
+      "request": "launch",
+      "args": ["--type=selection", "--title=long title", 
+        "--desc=long desc", "--directory=$HOME/src", "--file_type=Image Files (*.png *.jpg *.bmp)",
+        "--items=Item 1\tItem 2\tItem 3 and a half"],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/home/danny/src/BashQtHelper",
+      "program": "/home/danny/src/BashQtHelper/release/BashQtHelper",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Build Clean",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": ["clean"],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/home/danny/src/BashQtHelper",
+      "program": "/usr/bin/gmake"
+    }
+  ]
+}
