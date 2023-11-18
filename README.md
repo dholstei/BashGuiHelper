@@ -1,5 +1,5 @@
 # BashQtHelper
-Set of minimalist GUI `(Qt)` tools to be used by `bash` to:
+Set of minimalist GUI `(Qt)` tools written in **`C++`** to be used by `bash` to:
 - Browse files
 - Enter qualified data, such as IP, numeric, strings, etcetera
 - Make list selections
@@ -21,4 +21,5 @@ In addition to the DOM document and node classes, the most useful component of t
 Use the Makefile
 
 Or, open the folder with VS Code and hit `F5`
-  
+## Status
+Not yet usable, development emphasis is good architecture
