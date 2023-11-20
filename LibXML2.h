@@ -16,18 +16,20 @@ struct error
 
 class xNode {
   public:
-    xmlNodePtr ptr = NULL; //  XML Node pointer
+    xmlNodePtr ptr = NULL;  //  XML Node pointer
     error *err = NULL;      //  Error structure when error state exists
     xmlXPathContextPtr xpathCtx;    //  XPath context
 
-// constructors
-    xNode(xmlNodePtr n);
-    xNode(xmlNodePtr n, xmlXPathContextPtr ctxt);
-    xNode(xmlDocPtr doc);
+    xNode(xmlNodePtr n);    //  Object from library node pointer
+    xNode(xmlNodePtr n, xmlXPathContextPtr ctxt); //  Object from library node pointe, add known context
+    xNode(xmlDocPtr doc);   //  Blank node pointer
     xNode(xmlDocPtr doc, xmlNsPtr ns, const xmlChar * name, const xmlChar * content);
     xNode(xmlNodePtr parent, xmlNsPtr ns, const xmlChar * name, const xmlChar * content);
-//  destructor
     ~xNode();
+
+    std::string XML();  //  Rendered XML for this node only
+  private:
+    void SetError();
 };
 
 class xDoc {
@@ -37,15 +39,16 @@ class xDoc {
     bool PtrOwner = true;   //  Object owns the DOM memory and may free it
     xmlXPathContextPtr xpathCtx;    //  XPath context
 
-// constructors
     xDoc(xmlDocPtr d);
     xDoc(const xmlChar* version);
     xDoc(const char * filename, const char * encoding, int options);
     xDoc(const char * buffer, int size, const char * URL, const char * encoding, int options);
-//  destructor
     ~xDoc();
 
     xNode RootNode();
+    std::string XML();  //  Rendered XML document
+    std::string XML(const char * txt_encoding);  //  Rendered XML document, specify encoding
+    int XML(const char * filename, const char * txt_encoding);  //  Rendered XML document to file, specify encoding
 
   private:
     void SetError();
@@ -68,13 +71,13 @@ class XPathObj
 
       // Retreive XPATH boolean value.  Number values (such as count()) are converted to boolean
     bool Bool();
-      // Retreive XPATH double value
+      // Retreive XPATH double value, convert from valid string if available
     double Float();
-      // Retreive XPATH integer value
+      // Retreive XPATH integer value, cast of Float()
     int Int();
       // Retreive XPATH string value
     std::string Str();
-      // Retreive XPATH node set as c++ vector of xNode objects
+      // Retreive XPATH node set as std::vector<xNode>
     std::vector<xNode> Nodes();
 
       // This error is set when there is an issue with the Query, such as a syntax error

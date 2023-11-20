@@ -16,7 +16,7 @@
 #include "LibXML2.h"
 
 #define ERROR() return 1
-#define CANCELED() return 2
+#define CANCELLED() return 2
 
 #include <QtGui/QStandardItem>
 #include <QtGui/QStandardItemModel>
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     
     if (ArgList["type"].compare("filebrowser") == 0) {
         auto  FileName = QFileDialog::getOpenFileName(mainWindow, ArgList["title"].c_str(), ArgList["directory"].c_str(), ArgList["file_type"].c_str());
-        if (! FileName.toStdString().length()) ERROR();
+        if (! FileName.toStdString().length()) CANCELLED();
         std::cout <<  FileName.toStdString() << "\n"; return 0;}
 
     if (ArgList["type"].compare("multifiles") == 0) {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
             QStringList  FileNames = dialog.selectedFiles();
             for ( const auto& i :  FileNames ) std::cout << i.toStdString() << " ";
             std::cout<< "\n"; return 0;}
-        else ERROR();}
+        else CANCELLED();}
 
     if (ArgList["type"].compare("dirbrowser") == 0) {
         QFileDialog dialog(mainWindow, ArgList["title"].c_str());
@@ -106,14 +106,14 @@ int main(int argc, char *argv[])
             QStringList DirNames = dialog.selectedFiles();
             for ( const auto& i :  DirNames ) std::cout << i.toStdString() << " ";
             std::cout<< "\n"; return 0;}
-        else ERROR();}
+        else CANCELLED();}
 
     if (ArgList["type"].compare("selection") == 0) {        
         auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
         dialog.setWindowTitle(ArgList["title"].c_str());
         if (dialog.exec()) {
             std::cout<< "\n"; return 0;}
-        else ERROR();
+        else CANCELLED();
         }
 
     if (ArgList["type"].compare("tree") == 0) {
@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
             }
             
             XPathObj n = XPathObj(doc.ptr, (xmlChar*) "count(/selection/*)>2");
-            n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[3])");
-            // n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+            // n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[3])");
+            n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
             if (n.err)
             {   // turn into macro
                 std::cerr << "ERROR: " << n.err->msg->c_str();
@@ -137,7 +137,9 @@ int main(int argc, char *argv[])
                 if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
                 return 1;
             }
-            auto i = n.Float();
+            auto i = n.Nodes();
+            auto omg = i[2].XML();
+            int aw = doc.XML("new.xml", "UTF-8");
             xNode r = doc.RootNode();
         }
         
@@ -145,7 +147,7 @@ int main(int argc, char *argv[])
         dialog.setWindowTitle(ArgList["title"].c_str());
         if (dialog.exec()) {
             std::cout<< "\n"; return 0;}
-        else ERROR();
+        else CANCELLED();
         }
 
     else {std::cerr << "No GUI type chosen\n"; ERROR();}

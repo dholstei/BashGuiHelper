@@ -13,19 +13,19 @@ Set the ***type*** to `"selection"`, and set the ***items*** to a tab-separated 
   `BashQtHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
 
 ### File Browser
-Set the ***type*** to `"filebrowser"`, starting ***directory***, and ***file_type*** to select one file.
+Set the ***type*** to `"filebrowser"`, specify starting ***directory***, and ***file_type*** to select one file.
   
   `BashQtHelper --title="long title" --type=filebrowser --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
 
 ### Multi-File Browser
-Set the ***type*** to `"multifiles"`, starting ***directory***, and ***file_type*** to select multiple files.
+Set the ***type*** to `"multifiles"`, specify starting ***directory***, and ***file_type*** to select multiple files.
   
-  `BashQtHelper --title="long title" --type=filebrowser --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
+  `BashQtHelper --title="long title" --type=multifiles --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
 
 ### Directory Browser
-Set the ***type*** to `"multifiles"`, and starting ***directory***.
+Set the ***type*** to `"dirbrowser"`, and specify starting ***directory***.
   
-  `BashQtHelper --title="long title" --type=multifiles --directory=$HOME/src`
+  `BashQtHelper --title="long title" --type=dirbrowser --directory=$HOME/src`
 
 Results are printed to stdout, error returns 1 and sends error information to stderr
 
@@ -37,10 +37,11 @@ In addition to the DOM document and node classes, the most useful component of t
 - Handles errors for both XML Parsing and XPath queries
 - Has type-specific methods (*with specific error handling*) for:
   - Integers
+    - NOTE: Integer cast of the floating point results
   - Floating point
-    - NOTE: Will convert numeric strings from XPath `string()` function (*user should use `number()` function*)
+    - NOTE: Will also convert numeric strings from XPath `string()` function (*user should use `number()` function*)
   - Boolean
-    - NOTE: Will convert numeric values to boolean
+    - NOTE: Will also convert numeric values to boolean
   - String
   - Node sets
 

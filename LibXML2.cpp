@@ -14,11 +14,9 @@ XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str) {
         {
         case 0:
             if (! xpathCtx)
-            {
-                xpathCtx = xmlXPathNewContext(std::get<xmlDocPtr>(n));
-                if(xpathCtx == NULL) {SetError(); return;}
-            }
-            
+               {xpathCtx = xmlXPathNewContext(std::get<xmlDocPtr>(n));
+                if(xpathCtx == NULL) {SetError(); return;}}
+
             results = xmlXPathEval(str, xpathCtx);
             break;        
         case 1:
@@ -44,6 +42,8 @@ XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str, x
         }
     }
 XPathObj::~XPathObj() {}
+
+// Retreive XPATH double value, convert from valid string if available
 double XPathObj::Float() {
     double ans=0.0; const char *dest, *src;
     switch (results->type)
@@ -65,7 +65,11 @@ double XPathObj::Float() {
             return (double) 0.0;
         }
     }
+
+// Retreive XPATH integer value, cast of Float()
 int XPathObj::Int() {return (int) Float();}
+
+// Retreive XPATH string value
 std::string XPathObj::Str() {
     switch (results->type)
         {
@@ -79,6 +83,8 @@ std::string XPathObj::Str() {
             return std::string();
         }
     }
+
+// Retreive XPATH boolean value.  Number values (such as count()) are converted to boolean
 bool XPathObj::Bool() {
     switch (results->type)
         {
@@ -94,6 +100,8 @@ bool XPathObj::Bool() {
             return false;
         }
     }
+
+// Retreive XPATH node set as std::vector<xNode>
 std::vector<xNode> XPathObj::Nodes() {
     int cnt = 0;
     if (results->nodesetval) cnt = results->nodesetval->nodeNr;
@@ -101,10 +109,7 @@ std::vector<xNode> XPathObj::Nodes() {
     switch (results->type)
         {
         case XPATH_NODESET:
-            for (size_t i = 0; i < cnt; i++)
-            {
-                NS.push_back(xNode(results->nodesetval->nodeTab[i], xpathCtx));
-            }
+            for (size_t i = 0; i < cnt; i++) NS.push_back(xNode(results->nodesetval->nodeTab[i], xpathCtx));
             return NS;
         case XPATH_UNDEFINED:
             SetValError("Query yielded no results", XPATH_NODESET);
@@ -134,7 +139,6 @@ void XPathObj::SetValError(const char* msg, int type) {
     err->data = new std::string(query);
 }
 
-//  constructors
 xNode::xNode(xmlNodePtr n) {ptr = n;}
 xNode::xNode(xmlNodePtr n, xmlXPathContextPtr ctxt) {ptr = n; xpathCtx = ctxt;}
 xNode::xNode(xmlDocPtr doc) {ptr = xmlNewDocFragment(doc);}
@@ -142,10 +146,26 @@ xNode::xNode(xmlDocPtr doc, xmlNsPtr ns, const xmlChar * name, const xmlChar * c
     {ptr = xmlNewDocNode(doc, ns, name, content);}
 xNode::xNode(xmlNodePtr parent, xmlNsPtr ns, const xmlChar * name, const xmlChar * content)
     {ptr = xmlNewChild(parent, ns, name, content);}
-// xNode destructor
 xNode::~xNode() {if (ptr && false) xmlFreeNode(ptr);}
 
-// constructors
+//  Rendered XML for this node only
+std::string xNode::XML(){
+    xmlBufferPtr buf = xmlBufferCreate();
+    int sz = xmlNodeDump(buf, ptr->doc, ptr, 0, 0);
+    if (sz) return std::string((char*) buf->content);
+    SetError();
+    return std::string((char*) "");}
+
+void xNode::SetError() {
+    xmlErrorPtr m = xmlGetLastError(); if (!m) return;
+    err = new error;
+    err->msg = new std::string(m->message);
+    if (m->file)
+        {err->src = new std::string(m->file); err->src->append(": line "); err->src->append(std::to_string(m->line));}
+    if (m->str1) err->data = new std::string(m->str1);
+    xmlResetError(m);
+}
+
 xDoc::xDoc(xmlDocPtr d) {ptr = d; PtrOwner = false;}
 xDoc::xDoc(const xmlChar* version = (const xmlChar*) "1.0") {ptr = xmlNewDoc(version);}
 xDoc::xDoc(const char * filename, const char * encoding, int options)
@@ -154,15 +174,31 @@ xDoc::xDoc(const char * filename, const char * encoding, int options)
 xDoc::xDoc(const char * buffer, int size, const char * URL, const char * encoding, int options)
     {ptr = xmlReadMemory(buffer, size, URL, encoding, options);
     if (ptr == NULL) {SetError();}}
-//  destructor
 xDoc::~xDoc() {if (PtrOwner && ptr) {xmlFreeDoc(ptr); ptr = NULL;}}
+//  Rendered XML for this DOM document
+std::string xDoc::XML() {
+    xmlChar *res; int sz;
+    xmlDocDumpMemory(ptr, &res, &sz);
+    if (res) return std::string((char*) res);
+    SetError(); return std::string((char*) "");}
+//  Rendered XML document, specify encoding
+std::string xDoc::XML(const char * txt_encoding) {
+    xmlChar *res; int sz;
+    xmlDocDumpMemoryEnc(ptr, &res, &sz, txt_encoding);
+    if (res) return std::string((char*) res);
+    SetError(); return std::string((char*) "");}
+//  Rendered XML document to file
+int xDoc::XML(const char * filename, const char * txt_encoding) {
+    int i = xmlSaveFileEnc(filename, ptr, txt_encoding);
+    if (i > 0) return i;
+    SetError(); return i;}
 
 xNode xDoc::RootNode() {
     return xNode((xmlNodePtr) xmlDocGetRootElement(ptr));}
 
 void xDoc::SetError() {
+    xmlErrorPtr m = xmlGetLastError(); if (!m) return;
     err = new error;
-    xmlErrorPtr m = xmlGetLastError();
     err->msg = new std::string(m->message);
     if (m->file)
         {err->src = new std::string(m->file); err->src->append(": line "); err->src->append(std::to_string(m->line));}
