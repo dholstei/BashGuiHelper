@@ -16,6 +16,7 @@
 #include "LibXML2.h"
 
 #define ERROR() return 1
+#define CANCELED() return 2
 
 #include <QtGui/QStandardItem>
 #include <QtGui/QStandardItemModel>
@@ -71,7 +72,6 @@ private:
     QLabel *label;
 };
 
-
 int main(int argc, char *argv[])
 {
     int i=0; QApplication a(argc, argv, i);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     
     if (ArgList["type"].compare("filebrowser") == 0) {
         auto  FileName = QFileDialog::getOpenFileName(mainWindow, ArgList["title"].c_str(), ArgList["directory"].c_str(), ArgList["file_type"].c_str());
-        if (!  FileName.toStdString().length()) ERROR();
+        if (! FileName.toStdString().length()) ERROR();
         std::cout <<  FileName.toStdString() << "\n"; return 0;}
 
     if (ArgList["type"].compare("multifiles") == 0) {
@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
             }
             
             XPathObj n = XPathObj(doc.ptr, (xmlChar*) "count(/selection/*)>2");
-            // n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[1])");
-            n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+            n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[3])");
+            // n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
             if (n.err)
             {   // turn into macro
                 std::cerr << "ERROR: " << n.err->msg->c_str();
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
                 if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
                 return 1;
             }
-            auto i = n.Nodes();
+            auto i = n.Float();
             xNode r = doc.RootNode();
         }
         

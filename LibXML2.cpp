@@ -4,6 +4,7 @@
  */
 
 #include "LibXML2.h"
+#include <string.h>
 const char* types[] = {"XPATH_UNDEFINED", "XPATH_NODESET", "XPATH_BOOLEAN", "XPATH_NUMBER", "XPATH_STRING", "XPATH_POINT", "XPATH_RANGE", "XPATH_LOCATIONSET", "XPATH_USERS", "XPATH_XSLT_TREE"};
 
 // xNode constructors
@@ -44,10 +45,18 @@ XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str, x
     }
 XPathObj::~XPathObj() {}
 double XPathObj::Float() {
+    double ans=0.0; const char *dest, *src;
     switch (results->type)
         {
         case XPATH_NUMBER:
             return (double) results->floatval;
+        case XPATH_STRING:
+            src = (std::string((char*) results->stringval)).c_str();
+            dest = (std::string("ERR")).c_str();
+            ans = strtod(src, (char**) &dest);
+            if (dest != src) return ans;
+            SetValError("FLoating conversion failed", XPATH_NUMBER); err->src = new std::string("Text: "); err->src->append((char*) results->stringval);
+            return (double) 0.0;
         case XPATH_UNDEFINED:
             SetValError("Query yielded no results", XPATH_NUMBER);
             return (double) 0.0;

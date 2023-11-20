@@ -9,7 +9,7 @@
                 "all", "DEBUG=-g"
             ],
             "options": {
-                "cwd": "/home/danny/src/BashQtHelper"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"
@@ -28,7 +28,7 @@
                 "all"
             ],
             "options": {
-                "cwd": "/home/danny/src/BashQtHelper"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"

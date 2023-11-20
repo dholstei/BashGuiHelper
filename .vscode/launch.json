@@ -8,11 +8,11 @@
       "request": "launch",
       "args": ["--type=tree", "--title=long title", 
         "--desc=long desc", "--directory=$HOME/src", "--file_type=Image Files (*.png *.jpg *.bmp)",
-        "--items=Item 1\tItem 2\tItem 3 and a half", "--xml=/home/danny/src/BashQtHelper/selection.xml"],
+        "--items=Item 1\tItem 2\tItem 3 and a half", "--xml=/${workspaceFolder}/selection.xml"],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/danny/src/BashQtHelper",
-      "program": "/home/danny/src/BashQtHelper/debug/BashQtHelper",
+      "cwd": "/${workspaceFolder}",
+      "program": "/${workspaceFolder}/debug/BashQtHelper",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -33,8 +33,8 @@
         "--items=Item 1\tItem 2\tItem 3 and a half"],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/danny/src/BashQtHelper",
-      "program": "/home/danny/src/BashQtHelper/release/BashQtHelper",
+      "cwd": "/${workspaceFolder}",
+      "program": "/${workspaceFolder}/release/BashQtHelper",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -52,7 +52,7 @@
       "args": ["clean"],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/danny/src/BashQtHelper",
+      "cwd": "/${workspaceFolder}",
       "program": "/usr/bin/gmake"
     }
   ]

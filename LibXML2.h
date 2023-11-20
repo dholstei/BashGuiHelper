@@ -54,23 +54,31 @@ class xDoc {
 class XPathObj
 {
   public:
-    std::variant<xmlDocPtr, xmlNodePtr> node;
-    std::string query = "";
-    xmlXPathObjectPtr results = NULL;
-    xmlXPathContextPtr xpathCtx = NULL;
-    error *err = NULL;      //  Error structure when error state exists
+    std::variant<xmlDocPtr, xmlNodePtr> node; //  DOM doc or node pointer from LibXML2
+    std::string query = "";                   //  XPath query
+    xmlXPathObjectPtr results = NULL;         //  Pointer to XPath object
+    xmlXPathContextPtr xpathCtx = NULL;       //  Pointer to XPath context, internal use
+    error *err = NULL;                        //  Error structure when error state exists, non-NULL value indicates failure
 
     XPathObj(std::variant<xmlDocPtr, xmlNodePtr> node, const xmlChar * str);
     XPathObj(std::variant<xmlDocPtr, xmlNodePtr> node, const xmlChar * str, xmlXPathContextPtr ctx);
     ~XPathObj();
 
     //  RESULTS
+
+      // Retreive XPATH boolean value.  Number values (such as count()) are converted to boolean
     bool Bool();
+      // Retreive XPATH double value
     double Float();
+      // Retreive XPATH integer value
     int Int();
+      // Retreive XPATH string value
     std::string Str();
+      // Retreive XPATH node set as c++ vector of xNode objects
     std::vector<xNode> Nodes();
 
+      // This error is set when there is an issue with the Query, such as a syntax error
     void SetError();
+      // This error is set when an incompatible data type is retrieved, such as a node set when expecting a floating point
     void SetValError(const char* msg, int type);
 };
