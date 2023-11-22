@@ -147,14 +147,36 @@ xNode::xNode(xmlDocPtr doc, xmlNsPtr ns, const xmlChar * name, const xmlChar * c
 xNode::xNode(xmlNodePtr parent, xmlNsPtr ns, const xmlChar * name, const xmlChar * content)
     {ptr = xmlNewChild(parent, ns, name, content);}
 xNode::~xNode() {if (ptr && false) xmlFreeNode(ptr);}
+xNode::xNode(const char* XML, const char *encoding)
+{    xmlDocPtr d = xmlReadMemory(XML, strlen(XML), NULL, encoding, 0);
+     xmlNodePtr n = xmlDocGetRootElement(d);
+     ptr = xmlCopyNode(n, 1);}
 
 //  Rendered XML for this node only
-std::string xNode::XML(){
-    xmlBufferPtr buf = xmlBufferCreate();
+std::string xNode::XML()
+{    xmlBufferPtr buf = xmlBufferCreate();
     int sz = xmlNodeDump(buf, ptr->doc, ptr, 0, 0);
     if (sz) return std::string((char*) buf->content);
     SetError();
     return std::string((char*) "");}
+//  Add child node as last child of this node
+void xNode::AddChild(xNode child)
+{   xmlNodePtr n = xmlAddChild(ptr, child.ptr);
+    if (n == child.ptr) return;
+    else SetError();
+}
+//  Add node ahead of this to parent
+void xNode::AddPrevSibling(xNode node)
+{   xmlNodePtr n = xmlAddPrevSibling(ptr, node.ptr);
+    if (n == node.ptr) return;
+    else SetError();
+}
+//  Add node after this node
+void xNode::AddSibling(xNode node)
+{   xmlNodePtr n = xmlAddSibling(ptr, node.ptr);
+    if (n == node.ptr) return;
+    else SetError();
+}
 
 void xNode::SetError() {
     xmlErrorPtr m = xmlGetLastError(); if (!m) return;
@@ -167,20 +189,14 @@ void xNode::SetError() {
 }
 
 xDoc::xDoc(xmlDocPtr d) {ptr = d; PtrOwner = false;}
-xDoc::xDoc(const xmlChar* version = (const xmlChar*) "1.0") {ptr = xmlNewDoc(version);}
+xDoc::xDoc(const xmlChar* version) {ptr = xmlNewDoc(version);}
 xDoc::xDoc(const char * filename, const char * encoding, int options)
     {ptr = xmlReadFile(filename, encoding, options);
     if (ptr == NULL) {SetError();}}
-xDoc::xDoc(const char * buffer, int size, const char * URL, const char * encoding, int options)
+xDoc::xDoc(const char * buffer, int size, const char * URL, const char *encoding = "UTF-8", int options = 0)
     {ptr = xmlReadMemory(buffer, size, URL, encoding, options);
     if (ptr == NULL) {SetError();}}
 xDoc::~xDoc() {if (PtrOwner && ptr) {xmlFreeDoc(ptr); ptr = NULL;}}
-//  Rendered XML for this DOM document
-std::string xDoc::XML() {
-    xmlChar *res; int sz;
-    xmlDocDumpMemory(ptr, &res, &sz);
-    if (res) return std::string((char*) res);
-    SetError(); return std::string((char*) "");}
 //  Rendered XML document, specify encoding
 std::string xDoc::XML(const char * txt_encoding) {
     xmlChar *res; int sz;
@@ -188,8 +204,8 @@ std::string xDoc::XML(const char * txt_encoding) {
     if (res) return std::string((char*) res);
     SetError(); return std::string((char*) "");}
 //  Rendered XML document to file
-int xDoc::XML(const char * filename, const char * txt_encoding) {
-    int i = xmlSaveFileEnc(filename, ptr, txt_encoding);
+int xDoc::XML(std::string filename, const char * txt_encoding) {
+    int i = xmlSaveFileEnc(filename.c_str(), ptr, txt_encoding);
     if (i > 0) return i;
     SetError(); return i;}
 

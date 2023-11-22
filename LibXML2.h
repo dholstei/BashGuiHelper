@@ -18,16 +18,20 @@ class xNode {
   public:
     xmlNodePtr ptr = NULL;  //  XML Node pointer
     error *err = NULL;      //  Error structure when error state exists
-    xmlXPathContextPtr xpathCtx;    //  XPath context
+    xmlXPathContextPtr xpathCtx = NULL; //  XPath context
 
     xNode(xmlNodePtr n);    //  Object from library node pointer
     xNode(xmlNodePtr n, xmlXPathContextPtr ctxt); //  Object from library node pointe, add known context
-    xNode(xmlDocPtr doc);   //  Blank node pointer
+    xNode(xmlDocPtr doc);   //  Node from XML
     xNode(xmlDocPtr doc, xmlNsPtr ns, const xmlChar * name, const xmlChar * content);
     xNode(xmlNodePtr parent, xmlNsPtr ns, const xmlChar * name, const xmlChar * content);
+    xNode(const char* XML, const char *encoding = "UTF-8");
     ~xNode();
 
-    std::string XML();  //  Rendered XML for this node only
+    std::string XML();                //  Rendered XML for this node only
+    void AddChild(xNode child);       //  Add child node as last child of this node
+    void AddPrevSibling(xNode node);  //  Add node ahead of this to parent
+    void AddSibling(xNode node);      //  Add node after this node
   private:
     void SetError();
 };
@@ -40,15 +44,14 @@ class xDoc {
     xmlXPathContextPtr xpathCtx;    //  XPath context
 
     xDoc(xmlDocPtr d);
-    xDoc(const xmlChar* version);
+    xDoc(const xmlChar* version = (const xmlChar*) "1.0");
     xDoc(const char * filename, const char * encoding, int options);
     xDoc(const char * buffer, int size, const char * URL, const char * encoding, int options);
     ~xDoc();
 
     xNode RootNode();
-    std::string XML();  //  Rendered XML document
-    std::string XML(const char * txt_encoding);  //  Rendered XML document, specify encoding
-    int XML(const char * filename, const char * txt_encoding);  //  Rendered XML document to file, specify encoding
+    std::string XML(const char * txt_encoding = "UTF-8");  //  Rendered XML document
+    int XML(std::string filename, const char * txt_encoding = "UTF-8");  //  Rendered XML document to file
 
   private:
     void SetError();

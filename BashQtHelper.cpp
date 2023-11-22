@@ -137,10 +137,14 @@ int main(int argc, char *argv[])
                 if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
                 return 1;
             }
-            auto i = n.Nodes();
-            auto omg = i[2].XML();
-            int aw = doc.XML("new.xml", "UTF-8");
             xNode r = doc.RootNode();
+            auto nn = xNode("<item>sub Item 1</item>");
+            r.AddSibling(nn);
+            auto i = n.Nodes();
+            i[2].AddPrevSibling(nn);
+            auto omg = i[2].XML();
+            omg = r.XML();
+            int aw = doc.XML(std::string("new.xml"));
         }
         
         auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
