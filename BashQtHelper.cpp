@@ -80,6 +80,8 @@ xDoc doc;
 public:
     TreeSelect(xDoc doc);
     ~TreeSelect();
+
+    void AddItem(std::vector<xNode> nodes, QStandardItem *rootItem, int level);
 };
 
 TreeSelect::TreeSelect(xDoc d) {
@@ -101,9 +103,7 @@ TreeSelect::TreeSelect(xDoc d) {
         return;
     }
     auto NodeList = n.Nodes();
-    for (xNode node : NodeList)  {
-        XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(.)");
-        if (!obj.err) rootItem->appendRow(new QStandardItem((obj.Str()).c_str()));}
+    AddItem(NodeList, rootItem, 0);
 
     treeView->setModel(model);
 
@@ -120,8 +120,20 @@ TreeSelect::TreeSelect(xDoc d) {
     // Connect the signals and slots.
     // connect(pushButton, &QPushButton::clicked, this, &SelectionListDialog::accept);
     }
-
 TreeSelect::~TreeSelect() {}
+
+// function to recursively add xml node texts to tree browser
+void TreeSelect::AddItem(std::vector<xNode> nodes, QStandardItem *rootItem, int level) {
+    for (xNode node : nodes)  {
+        XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(.)");
+        if (!obj.err) {
+            auto item = new QStandardItem((obj.Str()).c_str());
+            rootItem->appendRow(item);
+            auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
+            if (branch.results->type == XPATH_NODESET)
+                {auto NS = branch.Nodes(); if (NS.size()) AddItem(NS, item, level + 1);}
+            }
+        }}
 
 int main(int argc, char *argv[])
 {
