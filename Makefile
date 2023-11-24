@@ -21,6 +21,7 @@ OBJECTS=BashQtHelper.o LibXML2.o
 	$(CPP) $(CPPFLAGS) -c $^
 
 $(BINDIR)/BashQtHelper:	$(OBJECTS)
+	@mkdir -p $(BINDIR)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
