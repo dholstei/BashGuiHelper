@@ -20,6 +20,7 @@
 
 #include <QtGui/QStandardItem>
 #include <QtGui/QStandardItemModel>
+
 class SelectionListDialog : public QDialog
 {
 public:
@@ -72,6 +73,56 @@ private:
     QLabel *label;
 };
 
+class TreeSelect : public QDialog
+{
+xDoc doc;
+
+public:
+    TreeSelect(xDoc doc);
+    ~TreeSelect();
+};
+
+TreeSelect::TreeSelect(xDoc d) {
+    doc = d;
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+
+    // Create the tree view.
+    QTreeView *treeView = new QTreeView();
+    QStandardItemModel *model = new QStandardItemModel();
+    QStandardItem *rootItem = model->invisibleRootItem();
+
+
+    XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+    if (n.err)
+    {   // turn into macro
+        std::cerr << "ERROR: " << n.err->msg->c_str();
+        if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
+        if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
+        return;
+    }
+    auto NodeList = n.Nodes();
+    for (xNode node : NodeList)  {
+        XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(.)");
+        if (!obj.err) rootItem->appendRow(new QStandardItem((obj.Str()).c_str()));}
+
+    treeView->setModel(model);
+
+    // Create the push button.
+    QPushButton *pushButton = new QPushButton("OK");
+
+    // Add the widgets to the layout.
+    mainLayout->addWidget(treeView);
+    mainLayout->addWidget(pushButton);
+
+    // Set the layout for the dialog.
+    setLayout(mainLayout);
+
+    // Connect the signals and slots.
+    // connect(pushButton, &QPushButton::clicked, this, &SelectionListDialog::accept);
+    }
+
+TreeSelect::~TreeSelect() {}
+
 int main(int argc, char *argv[])
 {
     int i=0; QApplication a(argc, argv, i);
@@ -117,19 +168,21 @@ int main(int argc, char *argv[])
         }
 
     if (ArgList["type"].compare("tree") == 0) {
+        xDoc *doc;
         if (ArgList["xml"].length())
         {
-            auto doc = xDoc(ArgList["xml"].c_str(), "1.0", 0);
-            if (doc.err)
+            doc = new xDoc(ArgList["xml"].c_str(), "1.0", 0);
+            if (doc->err)
             {   // turn into macro
-                std::cerr << "ERROR: " << doc.err->msg->c_str();
-                if (doc.err->src) std::cerr << "SRC: " << doc.err->src->c_str() << "\n";
+                std::cerr << "ERROR: " << doc->err->msg->c_str();
+                if (doc->err->src) std::cerr << "SRC: " << doc->err->src->c_str() << "\n";
                 return 1;
             }
             
-            XPathObj n = XPathObj(doc.ptr, (xmlChar*) "count(/selection/*)>2");
-            // n = XPathObj(doc.ptr, (xmlChar*) "string(/*/*[3])");
-            n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+            XPathObj n = XPathObj(doc->ptr, (xmlChar*) "count(/selection/*)");
+            if (!n.Bool()) {std::cerr << "No tree objects\n"; ERROR();}
+            // n = XPathObj(doc->ptr, (xmlChar*) "string(/*/*[3])");
+            n = XPathObj(doc->ptr, (xmlChar*) "/*/*");
             if (n.err)
             {   // turn into macro
                 std::cerr << "ERROR: " << n.err->msg->c_str();
@@ -137,17 +190,17 @@ int main(int argc, char *argv[])
                 if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
                 return 1;
             }
-            xNode r = doc.RootNode();
+            xNode r = doc->RootNode();
             auto nn = xNode("<item>sub Item 1</item>");
             r.AddSibling(nn);
             auto i = n.Nodes();
             i[2].AddPrevSibling(nn);
             auto omg = i[2].XML();
             omg = r.XML();
-            int aw = doc.XML(std::string("new.xml"));
+            int aw = doc->XML(std::string("new.xml"));
         }
         
-        auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
+        auto dialog = TreeSelect(*doc);
         dialog.setWindowTitle(ArgList["title"].c_str());
         if (dialog.exec()) {
             std::cout<< "\n"; return 0;}

@@ -9,18 +9,20 @@ const char* types[] = {"XPATH_UNDEFINED", "XPATH_NODESET", "XPATH_BOOLEAN", "XPA
 
 // xNode constructors
 XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str) {
-    query = std::string((char*) str);
-    switch (n.index())
+    query = std::string((char*) str); node = n;
+    switch (node.index())
         {
         case 0:
             if (! xpathCtx)
-               {xpathCtx = xmlXPathNewContext(std::get<xmlDocPtr>(n));
+               {xpathCtx = xmlXPathNewContext(std::get<xmlDocPtr>(node));
                 if(xpathCtx == NULL) {SetError(); return;}}
-
             results = xmlXPathEval(str, xpathCtx);
             break;        
         case 1:
-            results = xmlXPathNodeEval(std::get<xmlNodePtr>(n), str, xpathCtx);
+            if (! xpathCtx)
+               {xpathCtx = xmlXPathNewContext(std::get<xmlNodePtr>(node)->doc);
+                if(xpathCtx == NULL) {SetError(); return;}}
+            results = xmlXPathNodeEval(std::get<xmlNodePtr>(node), str, xpathCtx);
             break;        
         default:
             break;
@@ -29,13 +31,14 @@ XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str) {
     }
 XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str, xmlXPathContextPtr ctx) {
     xpathCtx = ctx;
-    switch (n.index())
+    query = std::string((char*) str); node = n;
+    switch (node.index())
         {
         case 0:
             results = xmlXPathEval(str, xpathCtx);
             break;        
         case 1:
-            results = xmlXPathNodeEval(std::get<xmlNodePtr>(n), str, xpathCtx);
+            results = xmlXPathNodeEval(std::get<xmlNodePtr>(node), str, xpathCtx);
             break;        
         default:
             break;
@@ -106,6 +109,7 @@ std::vector<xNode> XPathObj::Nodes() {
     int cnt = 0;
     if (results->nodesetval) cnt = results->nodesetval->nodeNr;
     std::vector<xNode> NS;
+    if (!cnt) return NS;
     switch (results->type)
         {
         case XPATH_NODESET:
@@ -177,7 +181,8 @@ void xNode::AddSibling(xNode node)
     if (n == node.ptr) return;
     else SetError();
 }
-
+//  XPath expression for this node
+std::string xNode::GetNodePath() {return std::string{(const char*) xmlGetNodePath(ptr)};}
 void xNode::SetError() {
     xmlErrorPtr m = xmlGetLastError(); if (!m) return;
     err = new error;
@@ -196,7 +201,10 @@ xDoc::xDoc(const char * filename, const char * encoding, int options)
 xDoc::xDoc(const char * buffer, int size, const char * URL, const char *encoding = "UTF-8", int options = 0)
     {ptr = xmlReadMemory(buffer, size, URL, encoding, options);
     if (ptr == NULL) {SetError();}}
-xDoc::~xDoc() {if (PtrOwner && ptr) {xmlFreeDoc(ptr); ptr = NULL;}}
+xDoc::~xDoc() {if (PtrOwner && ptr) {
+    try {xmlFreeDoc(ptr);}
+    catch(const std::exception& e) {;}
+    ptr = NULL;}}
 //  Rendered XML document, specify encoding
 std::string xDoc::XML(const char * txt_encoding) {
     xmlChar *res; int sz;

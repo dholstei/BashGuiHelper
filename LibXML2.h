@@ -32,6 +32,7 @@ class xNode {
     void AddChild(xNode child);       //  Add child node as last child of this node
     void AddPrevSibling(xNode node);  //  Add node ahead of this to parent
     void AddSibling(xNode node);      //  Add node after this node
+    std::string GetNodePath();        //  XPath expression for this node
   private:
     void SetError();
 };
