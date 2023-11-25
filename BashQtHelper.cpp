@@ -76,12 +76,13 @@ private:
 class TreeSelect : public QDialog
 {
 xDoc doc;
+int row = 0;
 
 public:
     TreeSelect(xDoc doc);
     ~TreeSelect();
 
-    void AddItem(std::vector<xNode> nodes, QStandardItem *rootItem, int level);
+    void AddItem(std::vector<xNode> nodes, std::variant<QStandardItemModel*, QStandardItem*> rootItem, int level);
 };
 
 TreeSelect::TreeSelect(xDoc d) {
@@ -90,9 +91,9 @@ TreeSelect::TreeSelect(xDoc d) {
 
     // Create the tree view.
     QTreeView *treeView = new QTreeView();
-    QStandardItemModel *model = new QStandardItemModel();
-    QStandardItem *rootItem = model->invisibleRootItem();
-
+    std::variant<QStandardItemModel*, QStandardItem*> model;
+    model = new QStandardItemModel();
+    // QStandardItem *rootItem = model->invisibleRootItem();
 
     XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
     if (n.err)
@@ -103,9 +104,9 @@ TreeSelect::TreeSelect(xDoc d) {
         return;
     }
     auto NodeList = n.Nodes();
-    AddItem(NodeList, rootItem, 0);
+    AddItem(NodeList, model, 0);
 
-    treeView->setModel(model);
+    treeView->setModel(std::get<QStandardItemModel*>(model));
 
     // Create the push button.
     QPushButton *pushButton = new QPushButton("OK");
@@ -123,15 +124,20 @@ TreeSelect::TreeSelect(xDoc d) {
 TreeSelect::~TreeSelect() {}
 
 // function to recursively add xml node texts to tree browser
-void TreeSelect::AddItem(std::vector<xNode> nodes, QStandardItem *rootItem, int level) {
+void TreeSelect::AddItem(std::vector<xNode> nodes, std::variant<QStandardItemModel*, QStandardItem*> rootItem, int level) {
     for (xNode node : nodes)  {
-        XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(.)");
+        XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(text())");
         if (!obj.err) {
             auto item = new QStandardItem((obj.Str()).c_str());
-            rootItem->appendRow(item);
+            item->setCheckable(true);
+            if (rootItem.index() == 0)  std::get<QStandardItemModel*>(rootItem)->appendRow(item);
+            else                        std::get<QStandardItem*>(rootItem)->appendRow(item);
+            
             auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
             if (branch.results->type == XPATH_NODESET)
-                {auto NS = branch.Nodes(); if (NS.size()) AddItem(NS, item, level + 1);}
+                {auto NS = branch.Nodes();
+                if (NS.size())
+                    AddItem(NS, item, level + 1);}
             }
         }}
 
@@ -188,29 +194,27 @@ int main(int argc, char *argv[])
             {   // turn into macro
                 std::cerr << "ERROR: " << doc->err->msg->c_str();
                 if (doc->err->src) std::cerr << "SRC: " << doc->err->src->c_str() << "\n";
-                return 1;
+                ERROR();
             }
-            
-            XPathObj n = XPathObj(doc->ptr, (xmlChar*) "count(/selection/*)");
-            if (!n.Bool()) {std::cerr << "No tree objects\n"; ERROR();}
-            // n = XPathObj(doc->ptr, (xmlChar*) "string(/*/*[3])");
-            n = XPathObj(doc->ptr, (xmlChar*) "/*/*");
-            if (n.err)
-            {   // turn into macro
-                std::cerr << "ERROR: " << n.err->msg->c_str();
-                if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
-                if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
-                return 1;
-            }
-            xNode r = doc->RootNode();
-            auto nn = xNode("<item>sub Item 1</item>");
-            r.AddSibling(nn);
-            auto i = n.Nodes();
-            i[2].AddPrevSibling(nn);
-            auto omg = i[2].XML();
-            omg = r.XML();
-            int aw = doc->XML(std::string("new.xml"));
+            XPathObj cnt = XPathObj(doc->ptr, (xmlChar*) "count(/selection/*)");
+            if (!cnt.Bool()) {std::cerr << "No tree objects\n"; ERROR();}
         }
+            
+        XPathObj n = XPathObj(doc->ptr, (xmlChar*) "/*/*");
+        if (n.err)
+        {   // turn into macro
+            std::cerr << "ERROR: " << n.err->msg->c_str();
+            if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
+            if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
+            ERROR();
+        }
+        xNode r = doc->RootNode();
+        auto nn = xNode("<item>sub Item 1</item>");
+        auto i = n.Nodes();
+        i[2].AddChild(nn);
+        auto omg = i[2].XML();
+        omg = r.XML();
+        int aw = doc->XML(std::string("new.xml"));
         
         auto dialog = TreeSelect(*doc);
         dialog.setWindowTitle(ArgList["title"].c_str());
