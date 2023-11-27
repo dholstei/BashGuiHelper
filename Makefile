@@ -3,7 +3,7 @@
 #	Programmer: Danny Holstein
 #
 CPP=g++
-CPPFLAGS=$(DEBUG) -std=c++17 -I/usr/include/qt5/ -I/usr/include/libxml2/
+CPPFLAGS=$(DEBUG) -std=c++17 -fpermissive -I/usr/include/qt5/ -I/usr/include/libxml2/
 LDFLAGS=$(DEBUG)
 LDLIBS= -lQt5Core -lQt5Gui -lQt5Widgets -lxml2
 

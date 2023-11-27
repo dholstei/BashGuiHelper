@@ -28,12 +28,14 @@ class TreeSelect : public QDialog
 {
 xDoc doc;
 int row = 0;
+QTreeView *treeView;
 
 public:
     TreeSelect(xDoc doc);
     ~TreeSelect();
 
     void AddItem(std::vector<xNode> nodes, std::variant<QStandardItemModel*, QStandardItem*> rootItem, int level);
+    void ClickedItem();
 };
 
 TreeSelect::TreeSelect(xDoc d) {
@@ -41,10 +43,10 @@ TreeSelect::TreeSelect(xDoc d) {
     QVBoxLayout *mainLayout = new QVBoxLayout();
 
     // Create the tree view.
-    QTreeView *treeView = new QTreeView();
+    treeView = new QTreeView();
+    treeView->setHeaderHidden(true);
     std::variant<QStandardItemModel*, QStandardItem*> model;
     model = new QStandardItemModel();
-    // QStandardItem *rootItem = model->invisibleRootItem();
 
     XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
     if (n.err)
@@ -63,14 +65,14 @@ TreeSelect::TreeSelect(xDoc d) {
     QPushButton *pushButton = new QPushButton("OK");
 
     // Add the widgets to the layout.
-    mainLayout->addWidget(treeView);
-    mainLayout->addWidget(pushButton);
+    mainLayout->addWidget(treeView); mainLayout->addWidget(pushButton);
 
     // Set the layout for the dialog.
     setLayout(mainLayout);
 
     // Connect the signals and slots.
-    // connect(pushButton, &QPushButton::clicked, this, &SelectionListDialog::accept);
+    connect(pushButton, &QPushButton::clicked, this, &TreeSelect::accept);
+    connect(treeView, &QTreeView::clicked, this, &TreeSelect::ClickedItem);
     }
 TreeSelect::~TreeSelect() {}
 
@@ -80,7 +82,7 @@ void TreeSelect::AddItem(std::vector<xNode> nodes, std::variant<QStandardItemMod
         XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(text())");
         if (!obj.err) {
             auto item = new QStandardItem((obj.Str()).c_str());
-            item->setCheckable(true);
+            item->setCheckable(true); item->setTristate(true);
             if (rootItem.index() == 0)  std::get<QStandardItemModel*>(rootItem)->appendRow(item);
             else                        std::get<QStandardItem*>(rootItem)->appendRow(item);
             
@@ -91,20 +93,26 @@ void TreeSelect::AddItem(std::vector<xNode> nodes, std::variant<QStandardItemMod
                     AddItem(NS, item, level + 1);}
             }
         }}
+void TreeSelect::ClickedItem() {
+    QTreeView *m = this->treeView;
+    std::cout << "Yay\n";}
 
 class MyComboBox: public QComboBox
 {
 public:
-    MyComboBox(QWidget *parent = nullptr): QComboBox(parent) {
-        connect(this, SIGNAL(activated(int)), this, SLOT(MyIndexChanged()));
-        // connect(this, &activated, this, &MyComboBox::MyIndexChanged);
-        }
-    ~MyComboBox(){}
+    MyComboBox(QWidget *parent = nullptr);
+    ~MyComboBox();
 
 public slots:
-    void MyIndexChanged() {
-        if (currentIndex()) {std::cout << currentText().toStdString() << "\n"; exit(0);}}
+    void MyIndexChanged();
 };
+MyComboBox::MyComboBox(QWidget *parent): QComboBox(parent) {
+    connect(this, SIGNAL(activated(int)), this, SLOT(MyIndexChanged()));
+    // connect(this, &MyComboBox::activated, this, &MyComboBox::MyIndexChanged);
+    }
+MyComboBox::~MyComboBox(){}
+
+void MyComboBox::MyIndexChanged() {if (currentIndex()) {std::cout << currentText().toStdString() << "\n"; exit(0);}}
 
 int main(int argc, char *argv[])
 {
@@ -143,10 +151,7 @@ int main(int argc, char *argv[])
         else CANCELLED();}
 
     if (ArgList["type"].compare("selection") == 0) {
-        // target *t = new target();
-        // QComboBox *comboBox = t->obj;
         MyComboBox *comboBox = new MyComboBox();
-        // QComboBox::connect(comboBox, SIGNAL(currentIndexChanged(int)), comboBox, &ComboIndexChanged);
 
         char* token; token = strtok((char*) ArgList["items"].c_str(), "\t");
         comboBox->addItem("---Make Selection---");

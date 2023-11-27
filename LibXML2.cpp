@@ -201,7 +201,7 @@ xDoc::xDoc(const char * filename, const char * encoding, int options)
 xDoc::xDoc(const char * buffer, int size, const char * URL, const char *encoding = "UTF-8", int options = 0)
     {ptr = xmlReadMemory(buffer, size, URL, encoding, options);
     if (ptr == NULL) {SetError();}}
-xDoc::~xDoc() {if (PtrOwner && ptr) {
+xDoc::~xDoc() {if (PtrOwner && ptr && false) {
     try {xmlFreeDoc(ptr);}
     catch(const std::exception& e) {;}
     ptr = NULL;}}
