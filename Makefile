@@ -24,5 +24,10 @@ $(BINDIR)/BashQtHelper:	$(OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
+$(BINDIR)/slot:	slot.cpp
+	@mkdir -p $(BINDIR)
+	$(CPP) $(CPPFLAGS) -c $^
+	$(CPP) $(LDFLAGS) -o $@ $(@F).o $(LDLIBS)
+
 clean:
 	rm -fv release/BashQtHelper debug/BashQtHelper *.o

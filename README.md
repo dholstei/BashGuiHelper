@@ -39,7 +39,7 @@ In addition to the DOM document and node classes, the most useful component of t
   - Integers
     - NOTE: Integer cast of the floating point results
   - Floating point
-    - NOTE: Will also convert numeric strings from XPath `string()` function (*user should use `number()` function*)
+    - NOTE: Will also convert numeric strings from XPath `string()` function (*user should use XPath `number()` function*)
   - Boolean
     - NOTE: Will also convert numeric values to boolean
   - String

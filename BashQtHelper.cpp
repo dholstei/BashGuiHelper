@@ -9,6 +9,9 @@
 #include <QtWidgets/QTreeView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QComboBox>
 #include <string>
 #include <iostream>
 #include <map>
@@ -20,58 +23,6 @@
 
 #include <QtGui/QStandardItem>
 #include <QtGui/QStandardItemModel>
-
-class SelectionListDialog : public QDialog
-{
-public:
-    SelectionListDialog(QWidget *parent = nullptr, char* items=nullptr) {
-        // Create the main layout.
-        QVBoxLayout *mainLayout = new QVBoxLayout();
-
-        // Create the tree view.
-        QTreeView *treeView = new QTreeView();
-        QStandardItemModel *model = new QStandardItemModel();
-        QStandardItem *rootItem = model->invisibleRootItem();
-
-
-        char* token; token = strtok((char*) items, "\t");
-        while( token != NULL ) {
-            rootItem->appendRow(new QStandardItem(token)); token = strtok(NULL, "\t");}
-
-        treeView->setModel(model);
-
-        // Create the push button.
-        QPushButton *pushButton = new QPushButton("OK");
-
-        // Add the widgets to the layout.
-        mainLayout->addWidget(treeView);
-        mainLayout->addWidget(pushButton);
-
-        // Set the layout for the dialog.
-        setLayout(mainLayout);
-
-        // Connect the signals and slots.
-        connect(pushButton, &QPushButton::clicked, this, &SelectionListDialog::accept);
-    }
-
-    // The slot that will be called when the dialog is accepted.
-    void onAccepted()
-    {
-        // Get the selected items from the tree view.
-        QItemSelectionModel *selectionModel = treeView->selectionModel();
-        QList<QModelIndex> selectedIndexes = selectionModel->selectedIndexes();
-
-        // Display the selected items in a label.
-        // label->setText(qml::join(", ", selectedIndexes));
-    }
-
-private:
-    // The tree view.
-    QTreeView *treeView;
-
-    // The label that will display the selected items.
-    QLabel *label;
-};
 
 class TreeSelect : public QDialog
 {
@@ -141,6 +92,20 @@ void TreeSelect::AddItem(std::vector<xNode> nodes, std::variant<QStandardItemMod
             }
         }}
 
+class MyComboBox: public QComboBox
+{
+public:
+    MyComboBox(QWidget *parent = nullptr): QComboBox(parent) {
+        connect(this, SIGNAL(activated(int)), this, SLOT(MyIndexChanged()));
+        // connect(this, &activated, this, &MyComboBox::MyIndexChanged);
+        }
+    ~MyComboBox(){}
+
+public slots:
+    void MyIndexChanged() {
+        if (currentIndex()) {std::cout << currentText().toStdString() << "\n"; exit(0);}}
+};
+
 int main(int argc, char *argv[])
 {
     int i=0; QApplication a(argc, argv, i);
@@ -177,10 +142,18 @@ int main(int argc, char *argv[])
             std::cout<< "\n"; return 0;}
         else CANCELLED();}
 
-    if (ArgList["type"].compare("selection") == 0) {        
-        auto dialog = SelectionListDialog(mainWindow, (char*) ArgList["items"].c_str());
-        dialog.setWindowTitle(ArgList["title"].c_str());
-        if (dialog.exec()) {
+    if (ArgList["type"].compare("selection") == 0) {
+        // target *t = new target();
+        // QComboBox *comboBox = t->obj;
+        MyComboBox *comboBox = new MyComboBox();
+        // QComboBox::connect(comboBox, SIGNAL(currentIndexChanged(int)), comboBox, &ComboIndexChanged);
+
+        char* token; token = strtok((char*) ArgList["items"].c_str(), "\t");
+        comboBox->addItem("---Make Selection---");
+        while( token != NULL ) {comboBox->addItem(token); token = strtok(NULL, "\t");}
+
+        comboBox->setWindowTitle(ArgList["title"].c_str()); comboBox->show();
+        if (a.exec()) {
             std::cout<< "\n"; return 0;}
         else CANCELLED();
         }
@@ -208,6 +181,7 @@ int main(int argc, char *argv[])
             if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
             ERROR();
         }
+#if 0
         xNode r = doc->RootNode();
         auto nn = xNode("<item>sub Item 1</item>");
         auto i = n.Nodes();
@@ -215,6 +189,7 @@ int main(int argc, char *argv[])
         auto omg = i[2].XML();
         omg = r.XML();
         int aw = doc->XML(std::string("new.xml"));
+#endif
         
         auto dialog = TreeSelect(*doc);
         dialog.setWindowTitle(ArgList["title"].c_str());
