@@ -1,5 +1,5 @@
 /* 
-    BashQtHelp - Use Qt to prompt user for files, list selection, numeric input, date, etcetera
+    BashGuiHelper - Use FLTK to prompt user for files, list selection, numeric input, date, etcetera
     Programmer: Danny Holstein
  */
 
