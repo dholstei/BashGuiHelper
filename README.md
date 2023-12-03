@@ -1,4 +1,4 @@
-# BashQtHelper
+# BashGuiHelper
 Set of minimalist GUI `(Qt)` tools written in **`C++`** to be used by `bash` to:
 - Browse files
 - Enter qualified data, such as IP, numeric, strings, etcetera
@@ -10,27 +10,27 @@ Launch at the bash command line, note, ***title*** parameter is universal;
 ### List Selection
 Set ***type*** to `"selection"`, and set ***items*** to a tab-separated value.
 
-  `BashQtHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
+  `BashGuiHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
 
 ### Tree Browser
 Set ***type*** to `"tree"`, and set the ***xml*** to an XML file.
   
-  `BashQtHelper --title="long title" --type=tree --xml=selection.xml`
+  `BashGuiHelper --title="long title" --type=tree --xml=selection.xml`
 
 ### File Browser
 Set ***type*** to `"filebrowser"`, specify starting ***directory***, and ***file_type*** to select one file.
   
-  `BashQtHelper --title="long title" --type=filebrowser --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
+  `BashGuiHelper --title="long title" --type=filebrowser --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
 
 ### Multi-File Browser
 Set ***type*** to `"multifiles"`, specify starting ***directory***, and ***file_type*** to select multiple files.
   
-  `BashQtHelper --title="long title" --type=multifiles --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
+  `BashGuiHelper --title="long title" --type=multifiles --directory=$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)"`
 
 ### Directory Browser
 Set ***type*** to `"dirbrowser"`, and specify starting ***directory***.
   
-  `BashQtHelper --title="long title" --type=dirbrowser --directory=$HOME/src`
+  `BashGuiHelper --title="long title" --type=dirbrowser --directory=$HOME/src`
 
 Results are printed to stdout, error returns 1 and sends error information to stderr
 

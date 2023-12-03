@@ -1,33 +1,35 @@
 # 
-#	BashQtHelp - Use Qt to prompt user for files, list selection, numeric input, date, etcetera
+#	BashGuiHelper - Use FLTK to prompt user for files, list selection, numeric input, date, etcetera
 #	Programmer: Danny Holstein
 #
 CPP=g++
-CPPFLAGS=$(DEBUG) -std=c++17 -fpermissive -I/usr/include/qt5/ -I/usr/include/libxml2/
+CPPFLAGS=$(DEBUG) -std=c++17
+INCLUDES:=-I/usr/include/libxml2
+INCLUDES:=$(INCLUDES) -I/usr/include/FL
 LDFLAGS=$(DEBUG)
-LDLIBS= -lQt5Core -lQt5Gui -lQt5Widgets -lxml2
-
+LDLIBS:=-lxml2
+LDLIBS:=$(LDLIBS) -lfltk
 ifeq ($(DEBUG),)
 	BINDIR=release
 else
 	BINDIR=debug
 endif
 
-all: $(BINDIR)/BashQtHelper
+all: $(BINDIR)/BashGuiHelper
 
-OBJECTS=BashQtHelper.o LibXML2.o
+OBJECTS=BashGuiHelper.o LibXML2.o
 
 %.o:	%.cpp LibXML2.h
-	$(CPP) $(CPPFLAGS) -c $^
+	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $^
 
-$(BINDIR)/BashQtHelper:	$(OBJECTS)
+$(BINDIR)/BashGuiHelper:	$(OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 $(BINDIR)/slot:	slot.cpp
 	@mkdir -p $(BINDIR)
-	$(CPP) $(CPPFLAGS) -c $^
+	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $^
 	$(CPP) $(LDFLAGS) -o $@ $(@F).o $(LDLIBS)
 
 clean:
-	rm -fv release/BashQtHelper debug/BashQtHelper *.o
+	rm -fv release/BashGuiHelper debug/BashGuiHelper *.o
