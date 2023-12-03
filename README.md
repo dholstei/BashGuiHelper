@@ -1,5 +1,5 @@
 # BashGuiHelper
-Set of minimalist GUI `(Qt)` tools written in **`C++`** to be used by `bash` to:
+Set of minimalist GUI `(FLTK)` tools written in **`C++`** to be used by `bash` to:
 - Browse files
 - Enter qualified data, such as IP, numeric, strings, etcetera
 - Make list selections
