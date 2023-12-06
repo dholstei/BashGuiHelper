@@ -16,6 +16,8 @@
 #define ERROR() return 1
 #define CANCELLED() return 2
 
+//  HCHoice class
+//  Extended from Fl_Choice to take tab-separated list from command line, print and exit(0) when item is selected
 class HChoice:      Fl_Choice
 {
 public:
@@ -31,6 +33,8 @@ static void MySelect(Fl_Widget*, void* a) {std::cout <<  ((Fl_Choice*) a)->text(
 };
 
 Fl_Tree_Prefs prefs;
+//  HTreeItem class
+//  Extended from Fl_Tree_Item to include XML tree node for XML operations
 class HTreeItem:    public Fl_Tree_Item
 {
 public:
@@ -44,6 +48,9 @@ public:
     ~HTreeItem(){;}
 };
 
+//  MyTree class
+//  Extended from Fl_Tree to take XML tree from command line and give user ability select multiple branches or individual nodes
+//  Methods will include saving out modified XML with "selected" attributes, or edited tree nodes
 class MyTree:       public Fl_Tree
 {
 public:
