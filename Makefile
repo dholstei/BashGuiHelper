@@ -6,9 +6,15 @@ CPP=g++
 CPPFLAGS=$(DEBUG) -std=c++17
 INCLUDES:=-I/usr/include/libxml2
 INCLUDES:=$(INCLUDES) -I/usr/include/FL
+INCLUDES:=$(INCLUDES) -I/usr/include
 LDFLAGS=$(DEBUG)
 LDLIBS:=-lxml2
-LDLIBS:=$(LDLIBS) -lfltk
+ifeq ($(STATIC),)
+	LDLIBS:=$(LDLIBS) -lfltk
+else
+	LDLIBS:=$(LDLIBS) /usr/lib64/libfltk.a \
+	-ldl -lX11 -lXcursor -lXfixes -lXext -lXft -lfontconfig -lXinerama -lXrender
+endif
 ifeq ($(DEBUG),)
 	BINDIR=release
 else

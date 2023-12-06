@@ -16,7 +16,7 @@
 #define ERROR() return 1
 #define CANCELLED() return 2
 
-class HChoice:  Fl_Choice
+class HChoice:      Fl_Choice
 {
 public:
     HChoice(const char* list):   Fl_Choice(10, 10, 200, 25) {
@@ -30,7 +30,21 @@ public:
 static void MySelect(Fl_Widget*, void* a) {std::cout <<  ((Fl_Choice*) a)->text() << "\n"; exit(0);}
 };
 
-class MyTree:   public Fl_Tree
+Fl_Tree_Prefs prefs;
+class HTreeItem:    public Fl_Tree_Item
+{
+public:
+    xmlNodePtr      node;
+
+    HTreeItem(xmlNodePtr n):  Fl_Tree_Item(prefs) {
+        node = n;
+        XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
+        if (!obj.err) this->label(obj.Str().c_str());
+    }
+    ~HTreeItem(){;}
+};
+
+class MyTree:       public Fl_Tree
 {
 public:
     xDoc doc;
@@ -46,28 +60,29 @@ public:
         if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
         return;
     }
+    showroot(1);
     auto NodeList = n.Nodes();
-    std::variant<Fl_Tree*, Fl_Tree_Item*> t = (Fl_Tree*) this;
-    AddItem(NodeList, t, 0);
+    AddItem(NodeList, std::string("head/"));
 
     }
     ~MyTree(){;}
     
-    void AddItem(std::vector<xNode> nodes,  std::variant<Fl_Tree*, Fl_Tree_Item*> rootItem, int level) {
+    void AddItem(std::vector<xNode> nodes,  std::string path, Fl_Tree_Item* p = NULL) {
         Fl_Tree_Item* item;
         for (xNode node : nodes)  {
             XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(text())");
             if (!obj.err) {
-                if (rootItem.index() == 0)
-                    item = this->add((obj.Str()).c_str());
-                else                        
-                    item = this->add(std::get<Fl_Tree_Item*>(rootItem), (const char*) (obj.Str()).c_str());
+                HTreeItem *i = new HTreeItem(node.ptr);
+                item = this->add(path.c_str(), i);
+                if (p)
+                    item->parent(p);
                 
                 auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
                 if (branch.results->type == XPATH_NODESET)
                     {auto NS = branch.Nodes();
+                    std::string p = path + obj.Str() + "/";
                     if (NS.size())
-                        AddItem(NS, item, level + 1);}
+                        AddItem(NS, p, i);}
                 }
             }
     }
