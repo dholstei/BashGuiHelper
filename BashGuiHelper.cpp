@@ -81,17 +81,27 @@ public:
             if (!obj.err) {
                 HTreeItem *i = new HTreeItem(node.ptr);
                 item = this->add(path.c_str(), i);
-                if (p)
-                    item->parent(p);
                 
                 auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
                 if (branch.results->type == XPATH_NODESET)
                     {auto NS = branch.Nodes();
-                    std::string p = path + obj.Str() + "/";
+                    std::string newPath = (p ? std::string(path.c_str()) + "/" : "") + escape(obj.Str());
+                    
                     if (NS.size())
-                        AddItem(NS, p, i);}
+                        AddItem(NS, newPath, i);}
                 }
             }
+    }
+
+    private:std::string escape(const std::string& input) {
+        std::string result;
+        for (char c : input) {
+            if (c == '/' || c == '\\') {
+                result += '\\';
+            }
+            result += c;
+        }
+        return result;
     }
 };
 
