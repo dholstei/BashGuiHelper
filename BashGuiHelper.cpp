@@ -12,6 +12,7 @@
 #include <Fl_Window.H>
 #include <Fl_Choice.H>
 #include <Fl_Tree.H>
+#include <Fl_Pixmap.H>
 
 #define ERROR() return 1
 #define CANCELLED() return 2
@@ -33,6 +34,11 @@ static void MySelect(Fl_Widget*, void* a) {std::cout <<  ((Fl_Choice*) a)->text(
 };
 
 Fl_Tree_Prefs prefs;
+
+#include "res/not-selected-sm.xpm"
+#include "res/selected_sm.xpm"
+Fl_Pixmap *SelectedIcon[2];
+
 //  HTreeItem class
 //  Extended from Fl_Tree_Item to include XML tree node for XML operations
 class HTreeItem:    public Fl_Tree_Item
@@ -42,10 +48,22 @@ public:
 
     HTreeItem(xmlNodePtr n):  Fl_Tree_Item(prefs) {
         node = n;
+        usericon(SelectedIcon[0]);
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
         if (!obj.err) this->label(obj.Str().c_str());
     }
     ~HTreeItem(){;}
+
+    void SelectBranch(bool sel) {
+        HTreeItem *c;
+        usericon(SelectedIcon[(int) sel]);
+        for (size_t i = 0; i < children(); i++)
+        {
+            c = (HTreeItem*) child(i);
+            c->SelectBranch(sel);
+        }
+        
+    }
 };
 
 //  MyTree class
@@ -55,25 +73,29 @@ class MyTree:       public Fl_Tree
 {
 public:
     xDoc doc;
-    
+
     MyTree(xDoc d):   Fl_Tree(10, 10, 380, 380) {
         doc = d;
-
-    XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
-    if (n.err)
-    {   // turn into macro
-        std::cerr << "ERROR: " << n.err->msg->c_str();
-        if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
-        if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
-        return;
-    }
-    showroot(1);
-    auto NodeList = n.Nodes();
-    AddItem(NodeList, std::string("head/"));
-
+        SelectedIcon[0] = new Fl_Pixmap(not_selected_sm_xpm);
+        SelectedIcon[1] = new Fl_Pixmap(selected_sm_xpm);
+        XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
+        if (n.err)
+        {   // turn into macro
+            std::cerr << "ERROR: " << n.err->msg->c_str();
+            if (n.err->src) std::cerr << "SRC: " << n.err->src->c_str() << "\n";
+            if (n.err->data) std::cerr << "QUERY: " << n.err->data->c_str() << "\n";
+            return;
+        }
+        showroot(1);
+        auto NodeList = n.Nodes();
+        AddItem(NodeList, std::string("head/"));
     }
     ~MyTree(){;}
     
+    // AddItem: Add Fl_Tree_Item.
+    //|     std::vector<xNode> nodes:   XML node list with items for this specific level
+    //|     std::string path:           FL_Tree item path (e.g. "Flintstones/Fred")
+    //|     Fl_Tree_Item* p:            Item to add
     void AddItem(std::vector<xNode> nodes,  std::string path, Fl_Tree_Item* p = NULL) {
         Fl_Tree_Item* item;
         for (xNode node : nodes)  {
@@ -93,12 +115,35 @@ public:
             }
     }
 
+    int handle(int event) {
+        HTreeItem *it = NULL;
+        switch(event) {
+            case FL_NO_EVENT:
+                break;
+            case FL_PUSH:
+                it = (HTreeItem*) item_clicked();
+                if (it) {
+                    if (it->usericon() == SelectedIcon[0]) {it->SelectBranch(true);}
+                    else it->SelectBranch(false);}
+                break;
+            case FL_ENTER:
+            case FL_LEAVE:
+            case FL_FOCUS:
+            case FL_DRAG:
+            case FL_RELEASE:
+            case FL_MOVE:
+            case FL_SHORTCUT:
+            case FL_SHOW:
+            default:
+                return Fl_Tree::handle(event);
+        }
+        return Fl_Tree::handle(event);
+    }
+
     private:std::string escape(const std::string& input) {
         std::string result;
         for (char c : input) {
-            if (c == '/' || c == '\\') {
-                result += '\\';
-            }
+            if (c == '/' || c == '\\') result += '\\';
             result += c;
         }
         return result;

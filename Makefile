@@ -3,10 +3,11 @@
 #	Programmer: Danny Holstein
 #
 CPP=g++
-CPPFLAGS=$(DEBUG) -std=c++17
+CPPFLAGS=$(DEBUG) -std=c++17 -fpermissive -Wno-write-strings
 INCLUDES:=-I/usr/include/libxml2
 INCLUDES:=$(INCLUDES) -I/usr/include/FL
 INCLUDES:=$(INCLUDES) -I/usr/include
+INCLUDES:=$(INCLUDES) -I./
 LDFLAGS=$(DEBUG)
 LDLIBS:=-lxml2
 ifeq ($(STATIC),)
