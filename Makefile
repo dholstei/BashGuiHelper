@@ -26,17 +26,12 @@ all: $(BINDIR)/BashGuiHelper
 
 OBJECTS=BashGuiHelper.o LibXML2.o
 
-%.o:	%.cpp LibXML2.h
+%.o:	%.cpp
 	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $^
 
 $(BINDIR)/BashGuiHelper:	$(OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LDLIBS)
-
-$(BINDIR)/slot:	slot.cpp
-	@mkdir -p $(BINDIR)
-	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $^
-	$(CPP) $(LDFLAGS) -o $@ $(@F).o $(LDLIBS)
 
 clean:
 	rm -fv release/BashGuiHelper debug/BashGuiHelper *.o
