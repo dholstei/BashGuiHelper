@@ -6,7 +6,6 @@
 #include <string>
 #include <iostream>
 #include <map>
-#include <stdio.h>
 #include "LibXML2.h"
 #include <Fl_Native_File_Chooser.H>
 #include <Fl_Window.H>
@@ -18,7 +17,7 @@
 #define CANCELLED() return 2
 
 //  HCHoice class
-//  Extended from Fl_Choice to take tab-separated list from command line, print and exit(0) when item is selected
+//| Extended from Fl_Choice to take tab-separated list from command line, print and exit(0) when item is selected
 class HChoice:      Fl_Choice
 {
 public:
@@ -37,10 +36,11 @@ Fl_Tree_Prefs prefs;
 
 #include "res/not-selected-sm.xpm"
 #include "res/selected_sm.xpm"
-Fl_Pixmap *SelectedIcon[2];
+#include "res/tri-state_sm.xpm"
+Fl_Pixmap *SelectedIcon[3];
 
 //  HTreeItem class
-//  Extended from Fl_Tree_Item to include XML tree node for XML operations
+//| Extended from Fl_Tree_Item to include XML tree node for XML operations
 class HTreeItem:    public Fl_Tree_Item
 {
 public:
@@ -54,21 +54,33 @@ public:
     }
     ~HTreeItem(){;}
 
+//  SelectBranch
+//| Item/Branch has been selected, toggle selection icon 
+//| If branch selected, set children selection to parent value
     void SelectBranch(bool sel) {
-        HTreeItem *c;
         usericon(SelectedIcon[(int) sel]);
-        for (size_t i = 0; i < children(); i++)
-        {
-            c = (HTreeItem*) child(i);
-            c->SelectBranch(sel);
-        }
-        
+        for (size_t i = 0; i < children(); i++) ((HTreeItem*) child(i))->SelectBranch(sel);
+    }
+
+//  FixParents
+//| Set parent selection to that of it's children, set to tri-state if mixed
+    void FixParent() {
+        HTreeItem* p = (HTreeItem*) parent();
+        if (!p) return;
+        auto icon = ((HTreeItem*) p->child(0))->usericon();
+        for (size_t i = 1; i < p->children(); i++) {
+            if (icon == SelectedIcon[2]) break;
+            if (icon != ((HTreeItem*) p->child(i))->usericon()) {
+                icon = SelectedIcon[2]; break;}
+        };
+        p->usericon(icon);
+        p->FixParent();
     }
 };
 
 //  MyTree class
-//  Extended from Fl_Tree to take XML tree from command line and give user ability select multiple branches or individual nodes
-//  Methods will include saving out modified XML with "selected" attributes, or edited tree nodes
+//| Extended from Fl_Tree to take XML tree from command line and give user ability select multiple branches or individual nodes
+//| Methods will include saving out modified XML with "selected" attributes, or edited tree nodes
 class MyTree:       public Fl_Tree
 {
 public:
@@ -78,6 +90,7 @@ public:
         doc = d;
         SelectedIcon[0] = new Fl_Pixmap(not_selected_sm_xpm);
         SelectedIcon[1] = new Fl_Pixmap(selected_sm_xpm);
+        SelectedIcon[2] = new Fl_Pixmap(tri_state_sm_xpm);
         XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
         if (n.err)
         {   // turn into macro
@@ -109,14 +122,16 @@ public:
                     {auto NS = branch.Nodes();
                     std::string newPath = (p ? std::string(path.c_str()) + "/" : "") + escape(obj.Str());
                     
-                    if (NS.size())
-                        AddItem(NS, newPath, i);}
+                    if (NS.size()) AddItem(NS, newPath, i);}
                 }
             }
     }
 
     int handle(int event) {
         HTreeItem *it = NULL;
+        auto rc = Fl_Tree::handle(event);
+        auto reason = callback_reason();
+        if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return rc;
         switch(event) {
             case FL_NO_EVENT:
                 break;
@@ -124,7 +139,8 @@ public:
                 it = (HTreeItem*) item_clicked();
                 if (it) {
                     if (it->usericon() == SelectedIcon[0]) {it->SelectBranch(true);}
-                    else it->SelectBranch(false);}
+                    else it->SelectBranch(false);
+                    it->FixParent();}
                 break;
             case FL_ENTER:
             case FL_LEAVE:
@@ -135,9 +151,9 @@ public:
             case FL_SHORTCUT:
             case FL_SHOW:
             default:
-                return Fl_Tree::handle(event);
+                break;
         }
-        return Fl_Tree::handle(event);
+        return rc;
     }
 
     private:std::string escape(const std::string& input) {
