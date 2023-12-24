@@ -133,15 +133,13 @@ public:
     void UserAccept(HTreeItem* item) {
         while (item)
         {
-            if (item->usericon() == SelectedIcon[0])
-            {
-                xmlUnlinkNode(item->node); xmlFreeNode(item->node);
-            }
+            if (item->usericon() == SelectedIcon[0])    //  non-obvious check for "not-selected"
+               {xmlUnlinkNode(item->node);}
+            else {if (item->children()) UserAccept((HTreeItem*) item->child(0));}
             
             item = (HTreeItem*) next(item);
         }
-        auto x = doc.XML();
-        exit(0);
+        std::cout <<  doc.XML() << "\n"; exit(0);
     }
 
     int handle(int event) {

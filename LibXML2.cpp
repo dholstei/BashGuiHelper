@@ -19,7 +19,7 @@ XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str) {
             results = xmlXPathEval(str, xpathCtx);
             break;        
         case 1:
-            if (! xpathCtx)
+            if (! xpathCtx) 
                {xpathCtx = xmlXPathNewContext(std::get<xmlNodePtr>(node)->doc);
                 if(xpathCtx == NULL) {SetError(); return;}}
             results = xmlXPathNodeEval(std::get<xmlNodePtr>(node), str, xpathCtx);

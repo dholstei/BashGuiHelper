@@ -13,7 +13,7 @@ Set ***type*** to `"selection"`, and set ***items*** to a tab-separated value.
   `BashGuiHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
 
 ### Tree Browser
-Set ***type*** to `"tree"`, and set the ***xml*** to an XML file.
+Set ***type*** to `"tree"`, and set the ***xml*** to an XML file.  An XML representation of the results/selected nodes will be sent to STDOUT.
   
   `BashGuiHelper --title="long title" --type=tree --xml=selection.xml`
 
