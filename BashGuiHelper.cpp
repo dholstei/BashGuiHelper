@@ -34,9 +34,9 @@ static void MySelect(Fl_Widget*, void* a) {std::cout <<  ((Fl_Choice*) a)->text(
 
 Fl_Tree_Prefs prefs;
 
-#include "res/not-selected-sm.xpm"
-#include "res/selected_sm.xpm"
-#include "res/tri-state_sm.xpm"
+#include "res/not-selected.xpm"
+#include "res/selected.xpm"
+#include "res/tri-state.xpm"
 Fl_Pixmap *SelectedIcon[3];
 
 //  HTreeItem class
@@ -62,7 +62,7 @@ public:
         for (size_t i = 0; i < children(); i++) ((HTreeItem*) child(i))->SelectBranch(sel);
     }
 
-//  FixParents
+//  FixParent
 //| Set parent selection to that of it's children, set to tri-state if mixed
     void FixParent() {
         HTreeItem* p = (HTreeItem*) parent();
@@ -88,9 +88,9 @@ public:
 
     MyTree(xDoc d):   Fl_Tree(10, 10, 380, 380) {
         doc = d;
-        SelectedIcon[0] = new Fl_Pixmap(not_selected_sm_xpm);
-        SelectedIcon[1] = new Fl_Pixmap(selected_sm_xpm);
-        SelectedIcon[2] = new Fl_Pixmap(tri_state_sm_xpm);
+        SelectedIcon[0] = new Fl_Pixmap(not_selected_xpm);
+        SelectedIcon[1] = new Fl_Pixmap(selected_xpm);
+        SelectedIcon[2] = new Fl_Pixmap(tri_state_xpm);
         XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
         if (n.err)
         {   // turn into macro
@@ -127,20 +127,41 @@ public:
             }
     }
 
+//  UserAccept
+//| User has indicated with FL_End they accept their choices and exit the program
+//| Print to stdout XML-formatted selections
+    void UserAccept(HTreeItem* item) {
+        while (item)
+        {
+            if (item->usericon() == SelectedIcon[0])
+            {
+                xmlUnlinkNode(item->node); xmlFreeNode(item->node);
+            }
+            
+            item = (HTreeItem*) next(item);
+        }
+        auto x = doc.XML();
+        exit(0);
+    }
+
     int handle(int event) {
         HTreeItem *it = NULL;
-        auto rc = Fl_Tree::handle(event);
+        int rc;
         auto reason = callback_reason();
         if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return rc;
         switch(event) {
             case FL_NO_EVENT:
                 break;
             case FL_PUSH:
+                rc = Fl_Tree::handle(event);
                 it = (HTreeItem*) item_clicked();
                 if (it) {
                     if (it->usericon() == SelectedIcon[0]) {it->SelectBranch(true);}
                     else it->SelectBranch(false);
-                    it->FixParent();}
+                    it->FixParent(); it->select(0);}
+                return rc;
+            case FL_KEYBOARD:
+                if (FL_End == Fl::event_key()) UserAccept((HTreeItem*) first());
                 break;
             case FL_ENTER:
             case FL_LEAVE:
@@ -153,7 +174,7 @@ public:
             default:
                 break;
         }
-        return rc;
+        return Fl_Tree::handle(event);
     }
 
     private:std::string escape(const std::string& input) {
