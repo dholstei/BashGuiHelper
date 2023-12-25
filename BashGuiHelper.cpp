@@ -12,6 +12,7 @@
 #include <Fl_Choice.H>
 #include <Fl_Tree.H>
 #include <Fl_Pixmap.H>
+#include <fl_ask.H>
 
 #define ERROR() return 1
 #define CANCELLED() return 2
@@ -48,9 +49,10 @@ public:
 
     HTreeItem(xmlNodePtr n):  Fl_Tree_Item(prefs) {
         node = n;
-        usericon(SelectedIcon[0]);
+        usericon(SelectedIcon[0]);  //  indices 0, 1, and 2; correspond to not-selected, selected, and tri-state; respectively
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
         if (!obj.err) this->label(obj.Str().c_str());
+        // add tooltip here for versions > 1.3.5
     }
     ~HTreeItem(){;}
 
@@ -146,7 +148,7 @@ public:
         HTreeItem *it = NULL;
         int rc;
         auto reason = callback_reason();
-        if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return rc;
+        if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return Fl_Tree::handle(event);
         switch(event) {
             case FL_NO_EVENT:
                 break;
@@ -230,6 +232,39 @@ int main(int argc, char *argv[])
             case  1: CANCELLED();
             default: std::cout <<  FileName.filename() << "\n"; return 0;
         }}
+
+//  Input, text input
+    if (ArgList["type"].compare("input") == 0) {
+        fl_message_title(ArgList["title"].c_str());
+        auto ans  = fl_input(ArgList["prompt"].c_str(), ArgList["default"].c_str()); 
+        if (ans == NULL) CANCELLED();
+        std::cout <<  ans << "\n"; return 0;
+    }
+
+//  password input
+    if (ArgList["type"].compare("password") == 0) {
+        fl_message_title(ArgList["title"].c_str());
+        auto ans  = fl_password(ArgList["prompt"].c_str()); 
+        if (ans == NULL) CANCELLED();
+        std::cout <<  ans << "\n"; return 0;
+    }
+
+//  Choice
+    if (ArgList["type"].compare("choice") == 0) {
+        fl_message_title(ArgList["title"].c_str());
+
+        char *choice[3] = {NULL, NULL, NULL};
+        char* token; token = strtok((char*) ArgList["items"].c_str(), "\t"); i=0;
+        while( token != NULL ) {choice[i++] = token; token = strtok(NULL, "\t");}
+        return fl_choice(ArgList["prompt"].c_str(), choice[0], choice[1], choice[2], i);
+        }
+
+//  message output
+    if (ArgList["type"].compare("message") == 0) {
+        fl_message_title(ArgList["title"].c_str());
+        fl_message(ArgList["message"].c_str()); 
+        return 0;
+    }
 
 //  List Selector, one item from tab-separated list
     if (ArgList["type"].compare("selection") == 0) {

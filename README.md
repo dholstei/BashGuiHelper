@@ -12,6 +12,26 @@ Set ***type*** to `"selection"`, and set ***items*** to a tab-separated value.
 
   `BashGuiHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
 
+### Choice Selection
+Set ***type*** to `"choice"`, and set ***items*** to a tab-separated value.  NOTE: Maximum 3 items.
+
+  `BashGuiHelper --title="long title" --type=choice --prompt="File Exists" --items="Overwrite\tSave As\tCancel"`
+
+### Text Input
+Set ***type*** to `"input"`, set `--prompt` and `--default`
+
+  `BashGuiHelper --type=input --prompt="Enter desired text data" --default="default answer"`
+
+### Password
+Set ***type*** to `"password"`, set `--prompt`
+
+  `BashGuiHelper --type=password --prompt="Enter secret info"`
+
+### Message
+Set ***type*** to `"message"`, set `--message`
+
+  `BashGuiHelper --type=message --message="We will continue with your script, tomorrow, the world"`
+
 ### Tree Browser
 Set ***type*** to `"tree"`, and set the ***xml*** to an XML file.  An XML representation of the results/selected nodes will be sent to STDOUT.
   
