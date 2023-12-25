@@ -13,7 +13,11 @@ Set ***type*** to `"selection"`, and set ***items*** to a tab-separated value.
   `BashGuiHelper --title="long title" --type=selection --items="Item 1\tItem 2\tItem 3 and a half"`
 
 ### Choice Selection
-Set ***type*** to `"choice"`, and set ***items*** to a tab-separated value.  NOTE: Maximum 3 items.
+Set ***type*** to `"choice"`, and set ***items*** to a tab-separated value.
+
+NOTES:
+ - Maximum 3 items.
+ - Unlike all the other types, the return code, `$?`, is the index of the choice
 
   `BashGuiHelper --title="long title" --type=choice --prompt="File Exists" --items="Overwrite\tSave As\tCancel"`
 
@@ -75,5 +79,3 @@ Use the Makefile
 
 Or, open the folder with VS Code and hit `F5`
 
-## Status
-Not yet usable, development emphasis is good architecture

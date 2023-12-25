@@ -249,10 +249,9 @@ int main(int argc, char *argv[])
         std::cout <<  ans << "\n"; return 0;
     }
 
-//  Choice
+//  Choice, max 3 items and return value is index of selection
     if (ArgList["type"].compare("choice") == 0) {
         fl_message_title(ArgList["title"].c_str());
-
         char *choice[3] = {NULL, NULL, NULL};
         char* token; token = strtok((char*) ArgList["items"].c_str(), "\t"); i=0;
         while( token != NULL ) {choice[i++] = token; token = strtok(NULL, "\t");}
