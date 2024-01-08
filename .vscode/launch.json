@@ -12,7 +12,7 @@
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "/${workspaceFolder}",
-      "program": "/${workspaceFolder}/debug/BashQtHelper",
+      "program": "/${workspaceFolder}/debug/BashGuiHelper",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -34,7 +34,7 @@
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "/${workspaceFolder}",
-      "program": "/${workspaceFolder}/release/BashQtHelper",
+      "program": "/${workspaceFolder}/release/BashGuiHelper",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

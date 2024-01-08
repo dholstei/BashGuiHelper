@@ -51,7 +51,14 @@ public:
         node = n;
         usericon(SelectedIcon[0]);  //  indices 0, 1, and 2; correspond to not-selected, selected, and tri-state; respectively
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
-        if (!obj.err) this->label(obj.Str().c_str());
+        if (!obj.err) {
+            this->label(obj.Str().c_str());
+            obj = XPathObj(node, (xmlChar*) "string(@tip)");
+            const char* s = obj.Str().c_str();
+#if (FL_MAJOR_VERSION*100 + FL_MINOR_VERSION*10 + FL_PATCH_VERSION) >= 135
+            this->tooltip(obj.Str().c_str());
+#endif
+            }
         // add tooltip here for versions > 1.3.5
     }
     ~HTreeItem(){;}
