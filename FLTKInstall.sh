@@ -83,22 +83,25 @@ function wget_fltk() {
 #   Configure.
 function configure() {
     mkdir -p $REPODIR && cd $REPODIR && NSRC=${SRC##*/} && DIR=${NSRC%.*}
-    cd $DIR-master;
-    if ./configure $CONFFLAGS;
-        then echo "--- ./configure $CONFFLAGS: Success  ---" | LOGGER;
-        else echo "--- ./configure $CONFFLAGS: FAILURE! ---" | LOGGER; exit 1; fi;
+    cd $DIR-branch-$FLTKBRANCH; mkdir -p build; cd build
+    if cmake $CONFFLAGS ../;
+        then echo "--- cmake $CONFFLAGS: Success  ---" | LOGGER;
+        else echo "--- cmake $CONFFLAGS: FAILURE! ---" | LOGGER; exit 1; fi;
+}
+#   Version.
+function version() {
+    if ! cd $REPODIR/fltk-branch-$FLTKBRANCH/build;
+        then echo "--- Build directory not available! ---" | LOGGER; exit 1; fi;
+    if VER=`./bin/fltk-config --version`;
+        then echo "--- FLTK Version: $VER  ---" | LOGGER;
+        else echo "--- FLTK Version: FAILURE! ---" | LOGGER; exit 1; fi;
 }
 
 #   Make
 function build() {
-    cd $REPODIR && NSRC=${SRC##*/} && DIR=${NSRC%.*}
-    if [ -d $DIR ]; 
-        then cd $DIR && echo "--- $DIR at branch: `git branch | head -1` ---" | LOGGER;
-        else echo "--- FLTK source directory missing! ---" | LOGGER; exit 1; fi;
-    if [ -f config.log ]; 
-        then RC=`tail -1 config.log | awk '{print $3}'`;
-        else echo "--- FLTK source not configured! ---" | LOGGER; exit 1; fi;
-    if ! (( $RC == 0 )); then echo "--- Configure step failed! ---" | LOGGER; exit 1; fi
+    mkdir -p $REPODIR && cd $REPODIR && NSRC=${SRC##*/} && DIR=${NSRC%.*}
+    cd $DIR-branch-$FLTKBRANCH; mkdir -p build; cd build
+    if ! [ -f fltk-config ];then echo "--- FLTK source not configured! ---" | LOGGER; exit 1; fi;
 
     if make $MAKEFLAGS;
         then echo "--- make: Success  ---" | LOGGER;
@@ -111,12 +114,6 @@ function install() {
     if make $MAKEFLAGS install;
         then echo "--- make install: Success  ---" | LOGGER;
         else echo "--- make install: FAILURE! ---" | LOGGER; exit 1; fi;
-    if echo /usr/local/lib >> /etc/ld.so.conf && ldconfig;
-        then echo "--- ldconfig: Success  ---" | LOGGER;
-        else echo "--- ldconfig: FAILURE! ---" | LOGGER; exit 1; fi;
-    if VERSION=`fltk"$FLTKVER" --version` ;
-        then echo "--- $VERSION: Success  ---" | LOGGER;
-        else echo "--- fltk"$FLTKVER": FAILURE! ---" | LOGGER; exit 1; fi;
 }
 
 #---End of function declarations----------------------------------------------
@@ -135,13 +132,13 @@ if ! [ -z "${CONFXML}" ]; then
     done
 fi
 
-if [ -z "${FLTKVER}" ];     then FLTKVER=1.3.9; fi
+if [ -z "${FLTKBRANCH}" ];  then FLTKBRANCH=1.3; fi
 if [ -z "${SRC}" ];         then SRC=https://github.com/fltk/fltk.git; fi
-if [ -z "${FLTKZIP}" ];     then FLTKZIP=https://github.com/fltk/fltk/archive/refs/heads/master.zip; fi
+if [ -z "${FLTKZIP}" ];     then FLTKZIP=https://github.com/fltk/fltk/archive/refs/heads/branch-$FLTKBRANCH.zip; fi
 if [ -z "${REPODIR}" ];     then REPODIR=repo; fi
-if [ -z "${PREFIX}" ];      then PREFIX=/usr; fi
+if [ -z "${PREFIX}" ];      then PREFIX=/usr/local; fi
 if [ -z "${MAKEFLAGS}" ];   then MAKEFLAGS=-j; fi
-if [ -z "${CONFFLAGS}" ];   then CONFFLAGS="--prefix=$PREFIX --enable-shared --with-platlibdir=lib64"; fi
+if [ -z "${CONFFLAGS}" ];   then CONFFLAGS="-D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="$PREFIX" -D OPTION_BUILD_SHARED_LIBS=ON -D CMAKE_C_FLAGS=-fPIC -D CMAKE_CXX_FLAGS=-fPIC"; fi
 
 #   OS and architecture
 if [ -z "${OS}" ];          then OS=Linux; fi
