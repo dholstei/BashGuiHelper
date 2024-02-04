@@ -111,7 +111,7 @@ function build() {
 #   Install
 function install() {
     build;
-    if make $MAKEFLAGS install;
+    if sudo make $MAKEFLAGS install;
         then echo "--- make install: Success  ---" | LOGGER;
         else echo "--- make install: FAILURE! ---" | LOGGER; exit 1; fi;
 }

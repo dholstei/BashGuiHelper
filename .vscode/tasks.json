@@ -6,7 +6,7 @@
             "label": "C/C++: Debug Build",
             "command": "/usr/bin/gmake",
             "args": [
-                "all", "DEBUG=-g"
+                "all", "DEBUG=-g", "FLTKPREFIX=/usr/local"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -25,7 +25,7 @@
             "label": "C/C++: Release Build",
             "command": "/usr/bin/gmake",
             "args": [
-                "all"
+                "all", "FLTKPREFIX=/usr/local"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

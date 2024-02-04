@@ -7,11 +7,14 @@
 #include <iostream>
 #include <map>
 #include "LibXML2.h"
+#include <Fl.H>
 #include <Fl_Native_File_Chooser.H>
 #include <Fl_Window.H>
 #include <Fl_Choice.H>
 #include <Fl_Tree.H>
 #include <Fl_Pixmap.H>
+#include <Fl_Widget.H>
+#include <Fl_Tooltip.H>
 #include <fl_ask.H>
 
 #define ERROR() return 1
@@ -45,21 +48,16 @@ Fl_Pixmap *SelectedIcon[3];
 class HTreeItem:    public Fl_Tree_Item
 {
 public:
-    xmlNodePtr      node;
+    xmlNodePtr  node;
+    std::string  tooltip;
 
     HTreeItem(xmlNodePtr n):  Fl_Tree_Item(prefs) {
         node = n;
         usericon(SelectedIcon[0]);  //  indices 0, 1, and 2; correspond to not-selected, selected, and tri-state; respectively
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
-        if (!obj.err) {
-            this->label(obj.Str().c_str());
-            obj = XPathObj(node, (xmlChar*) "string(@tip)");
-            const char* s = obj.Str().c_str();
-#if (FL_MAJOR_VERSION*100 + FL_MINOR_VERSION*10 + FL_PATCH_VERSION) >= 135
-            this->tooltip(obj.Str().c_str());
-#endif
-            }
-        // add tooltip here for versions > 1.3.5
+        if (!obj.err) this->label(obj.Str().c_str());
+        obj = XPathObj(node, (xmlChar*) "string(@tip)");
+        if (!obj.err) tooltip = obj.Str();
     }
     ~HTreeItem(){;}
 
@@ -84,6 +82,20 @@ public:
         };
         p->usericon(icon);
         p->FixParent();
+    }
+    
+    void handleTip(int event) {
+        if (! tooltip.length()) return;
+        switch (event) {
+            case FL_ENTER:
+                Fl_Tooltip::enter_area((Fl_Widget*) this, Fl::event_x_root(), Fl::event_y_root(), 600, 50, tooltip.c_str());
+                return;
+            case FL_LEAVE:
+                Fl_Tooltip::exit((Fl_Widget*) this);  // Hide the tooltip when leaving the area
+                return;  // Handle the event
+            default:
+                return;  // Call the base class handle function for other events
+        }
     }
 };
 
@@ -172,6 +184,10 @@ public:
                 break;
             case FL_ENTER:
             case FL_LEAVE:
+                it = (HTreeItem*) Fl::belowmouse();
+                if (! it) break;
+                if (! it->tooltip.length()) break;
+                it->handleTip(event); break;
             case FL_FOCUS:
             case FL_DRAG:
             case FL_RELEASE:

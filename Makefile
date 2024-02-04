@@ -4,16 +4,17 @@
 #
 CPP=g++
 CPPFLAGS=$(DEBUG) -std=c++17 -fpermissive -Wno-write-strings
+FLTKPREFIX:=/usr
 INCLUDES:=-I/usr/include/libxml2
-INCLUDES:=$(INCLUDES) -I/usr/include/FL
+INCLUDES:=$(INCLUDES) -I$(FLTKPREFIX)/include/FL
 INCLUDES:=$(INCLUDES) -I/usr/include
 INCLUDES:=$(INCLUDES) -I./
 LDFLAGS=$(DEBUG)
 LDLIBS:=-lxml2
 ifeq ($(STATIC),)
-	LDLIBS:=$(LDLIBS) -lfltk
+	LDLIBS:=$(LDLIBS) $(FLTKPREFIX)/lib64/libfltk.so
 else
-	LDLIBS:=$(LDLIBS) /usr/lib64/libfltk.a \
+	LDLIBS:=$(LDLIBS) $(FLTKPREFIX)/lib64/libfltk.a \
 	-ldl -lX11 -lXcursor -lXfixes -lXext -lXft -lfontconfig -lXinerama -lXrender
 endif
 ifeq ($(DEBUG),)
