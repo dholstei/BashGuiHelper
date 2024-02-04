@@ -84,9 +84,10 @@ public:
         p->FixParent();
     }
     
-    void handleTip(int event) {
+    void HandleTip(int event) {
         if (! tooltip.length()) return;
         switch (event) {
+            case FL_MOVE:
             case FL_ENTER:
                 Fl_Tooltip::enter_area((Fl_Widget*) this, Fl::event_x_root(), Fl::event_y_root(), 600, 50, tooltip.c_str());
                 return;
@@ -182,16 +183,17 @@ public:
             case FL_KEYBOARD:
                 if (FL_End == Fl::event_key()) UserAccept((HTreeItem*) first());
                 break;
-            case FL_ENTER:
-            case FL_LEAVE:
-                it = (HTreeItem*) Fl::belowmouse();
-                if (! it) break;
-                if (! it->tooltip.length()) break;
-                it->handleTip(event); break;
             case FL_FOCUS:
             case FL_DRAG:
             case FL_RELEASE:
+                break;
+            case FL_ENTER:
+            case FL_LEAVE:
             case FL_MOVE:
+                it = (HTreeItem*) Fl::belowmouse();
+                if (! it) break;
+                if (! it->tooltip.length()) break;
+                it->HandleTip(event); break;
             case FL_SHORTCUT:
             case FL_SHOW:
             default:
