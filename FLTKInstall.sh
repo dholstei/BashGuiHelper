@@ -80,13 +80,13 @@ function wget_fltk() {
         else echo "--- unzip FLTK: FAILURE! ---" | LOGGER; exit 1; fi;
 }
 
-#   Configure.
-function configure() {
+#   Configure with CMake.
+function cmake() {
     mkdir -p $REPODIR && cd $REPODIR && NSRC=${SRC##*/} && DIR=${NSRC%.*}
     cd $DIR-branch-$FLTKBRANCH; mkdir -p build; cd build
-    if cmake $CONFFLAGS ../;
-        then echo "--- cmake $CONFFLAGS: Success  ---" | LOGGER;
-        else echo "--- cmake $CONFFLAGS: FAILURE! ---" | LOGGER; exit 1; fi;
+    if cmake $CMAKEFLAGS ../;
+        then echo "--- cmake $CMAKEFLAGS: Success  ---" | LOGGER;
+        else echo "--- cmake $CMAKEFLAGS: FAILURE! ---" | LOGGER; exit 1; fi;
 }
 #   Version.
 function version() {
@@ -138,7 +138,7 @@ if [ -z "${FLTKZIP}" ];     then FLTKZIP=https://github.com/fltk/fltk/archive/re
 if [ -z "${REPODIR}" ];     then REPODIR=repo; fi
 if [ -z "${PREFIX}" ];      then PREFIX=/usr/local; fi
 if [ -z "${MAKEFLAGS}" ];   then MAKEFLAGS=-j; fi
-if [ -z "${CONFFLAGS}" ];   then CONFFLAGS="-D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="$PREFIX" -D OPTION_BUILD_SHARED_LIBS=ON -D CMAKE_C_FLAGS=-fPIC -D CMAKE_CXX_FLAGS=-fPIC"; fi
+if [ -z "${CMAKEFLAGS}" ];  then CMAKEFLAGS="-D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="$PREFIX" -D OPTION_BUILD_SHARED_LIBS=ON -D CMAKE_C_FLAGS=-fPIC -D CMAKE_CXX_FLAGS=-fPIC"; fi
 
 #   OS and architecture
 if [ -z "${OS}" ];          then OS=Linux; fi
