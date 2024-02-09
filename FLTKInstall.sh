@@ -41,13 +41,13 @@ function installer() {
 function check_function() {
     if $1 --version 2>/dev/null; then return; fi;
     installer; 
-    if $INSTALL;
+    if sudo $INSTALL;
         then echo "--- \"$INSTALL\": Success  ---" | LOGGER;
         else echo "--- \"$INSTALL\": FAILURE! ---" | LOGGER; exit 1; fi;
 }
 
 #   Clone FLTK repo
-#   NOTE:   FLTK repo goes deep and doing a git may not be practical!
+#   NOTE:   FLTK repo git may not be practical!
 #           Unless you intend to develop and/or switch branches, it's better to wget the ZIP with wget_fltk()
 function git_fltk() {
     PACKAGES=(git git git); check_function "git";
@@ -81,12 +81,16 @@ function wget_fltk() {
 }
 
 #   Configure with CMake.
-function cmake() {
-    mkdir -p $REPODIR && cd $REPODIR && NSRC=${SRC##*/} && DIR=${NSRC%.*}
-    cd $DIR-branch-$FLTKBRANCH; mkdir -p build; cd build
+function config_fltk() {
+    PACKAGES=(cmake cmake cmake); check_function "cmake"; pwd
+    NSRC=${SRC##*/} && DIR=${NSRC%.*}; pwd
+    if mkdir -p $REPODIR && cd $REPODIR &&\
+       cd $DIR-branch-$FLTKBRANCH && mkdir -p build && cd build;
+        then echo "--- Create build dir: Success  ---" | LOGGER;
+        else echo "--- Create build dir: FAILURE! ---" | LOGGER; exit 1; fi;
     if cmake $CMAKEFLAGS ../;
-        then echo "--- cmake $CMAKEFLAGS: Success  ---" | LOGGER;
-        else echo "--- cmake $CMAKEFLAGS: FAILURE! ---" | LOGGER; exit 1; fi;
+        then echo "--- cmake "$CMAKEFLAGS": Success  ---" | LOGGER;
+        else echo "--- cmake "$CMAKEFLAGS": FAILURE! ---" | LOGGER; exit 1; fi;
 }
 #   Version.
 function version() {
