@@ -83,30 +83,16 @@ public:
         p->usericon(icon);
         p->FixParent();
     }
-    
-    void HandleTip(int event) {
-        if (! tooltip.length()) return;
-        switch (event) {
-            case FL_MOVE:
-            case FL_ENTER:
-                Fl_Tooltip::enter_area((Fl_Widget*) this, Fl::event_x_root(), Fl::event_y_root(), 600, 50, tooltip.c_str());
-                return;
-            case FL_LEAVE:
-                Fl_Tooltip::exit((Fl_Widget*) this);  // Hide the tooltip when leaving the area
-                return;  // Handle the event
-            default:
-                return;  // Call the base class handle function for other events
-        }
-    }
 };
 
 //  MyTree class
 //| Extended from Fl_Tree to take XML tree from command line and give user ability select multiple branches or individual nodes
 //| Methods will include saving out modified XML with "selected" attributes, or edited tree nodes
-class MyTree:       public Fl_Tree
+class MyTree:   public Fl_Tree
 {
 public:
     xDoc doc;
+    int size = 0;   //  number of tree items
 
     MyTree(xDoc d):   Fl_Tree(10, 10, 380, 380) {
         doc = d;
@@ -136,7 +122,7 @@ public:
         for (xNode node : nodes)  {
             XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(text())");
             if (!obj.err) {
-                HTreeItem *i = new HTreeItem(node.ptr);
+                HTreeItem *i = new HTreeItem(node.ptr); size++;
                 item = this->add(path.c_str(), i);
                 
                 auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
@@ -186,14 +172,21 @@ public:
             case FL_FOCUS:
             case FL_DRAG:
             case FL_RELEASE:
-                break;
             case FL_ENTER:
             case FL_LEAVE:
+                break;
             case FL_MOVE:
-                it = (HTreeItem*) Fl::belowmouse();
-                if (! it) break;
-                if (! it->tooltip.length()) break;
-                it->HandleTip(event); break;
+                for (int i = 0; i < size; ++i) {
+                    HTreeItem* item = (HTreeItem*) this->find_item(i);
+                    if (item && Fl::event_x() >= item->x() && Fl::event_x() < item->x() + item->w() &&
+                        Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h()) {
+                        it = item;
+                        break;
+                    }
+                }
+                if (! it) break; if (! it->tooltip.length()) break;
+                Fl_Tooltip::enter_area((Fl_Widget*) it, Fl::event_x_root(), Fl::event_y_root(), 600, 50, it->tooltip.c_str());
+                break;
             case FL_SHORTCUT:
             case FL_SHOW:
             default:

@@ -82,8 +82,8 @@ function wget_fltk() {
 
 #   Configure with CMake.
 function config_fltk() {
-    PACKAGES=(cmake cmake cmake); check_function "cmake"; pwd
-    NSRC=${SRC##*/} && DIR=${NSRC%.*}; pwd
+    PACKAGES=(cmake cmake cmake); check_function "cmake";
+    NSRC=${SRC##*/} && DIR=${NSRC%.*};
     if mkdir -p $REPODIR && cd $REPODIR &&\
        cd $DIR-branch-$FLTKBRANCH && mkdir -p build && cd build;
         then echo "--- Create build dir: Success  ---" | LOGGER;
