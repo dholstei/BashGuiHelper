@@ -35,18 +35,18 @@ all: $(BINDIR)/BashGuiHelper
 
 fltk:
 	@if ./FLTKInstall.sh wget_fltk ; \
-		then echo "--- fltk download: Success ---" | $(LOGGER) ;\
-		else echo "--- fltk download: FAILURE! ---" | $(LOGGER) ; exit 1; fi
+		then echo "--- FLTK download: Success ---" | $(LOGGER) ;\
+		else echo "--- FLTK download: FAILURE! ---" | $(LOGGER) ; exit 1; fi
 	@export PREFIX=$(FLTKPREFIX);\
 	if ./FLTKInstall.sh config_fltk ; \
-		then echo "--- fltk CMAKE configure: Success ---" | $(LOGGER) ;\
-		else echo "--- fltk CMAKE configure: FAILURE! ---" | $(LOGGER) ; exit 1; fi
+		then echo "--- FLTK CMAKE configure: Success ---" | $(LOGGER) ;\
+		else echo "--- FLTK CMAKE configure: FAILURE! ---" | $(LOGGER) ; exit 1; fi
 	@if ./FLTKInstall.sh build ; \
-		then echo "--- fltk build: Success ---" | $(LOGGER) ;\
-		else echo "--- fltk build: FAILURE! ---" | $(LOGGER) ; exit 1; fi
+		then echo "--- FLTK build: Success ---" | $(LOGGER) ;\
+		else echo "--- FLTK build: FAILURE! ---" | $(LOGGER) ; exit 1; fi
 	@if sudo ./FLTKInstall.sh install ; \
-		then echo "--- fltk install: Success ---" | $(LOGGER) ;\
-		else echo "--- fltk install: FAILURE! ---" | $(LOGGER) ; exit 1; fi
+		then echo "--- FLTK install: Success ---" | $(LOGGER) ;\
+		else echo "--- FLTK install: FAILURE! ---" | $(LOGGER) ; exit 1; fi
 
 OBJECTS=BashGuiHelper.o LibXML2.o
 
