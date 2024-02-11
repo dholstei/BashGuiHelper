@@ -36,7 +36,7 @@ public:
 static void MySelect(Fl_Widget*, void* a) {std::cout <<  ((Fl_Choice*) a)->text() << "\n"; exit(0);}
 };
 
-Fl_Tree_Prefs prefs;
+Fl_Tree_Prefs p;
 
 #include "res/not-selected.xpm"
 #include "res/selected.xpm"
@@ -50,8 +50,9 @@ class HTreeItem:    public Fl_Tree_Item
 public:
     xmlNodePtr  node;
     std::string  tooltip;
+    Fl_Tree_Prefs prefs = p;
 
-    HTreeItem(xmlNodePtr n):  Fl_Tree_Item(prefs) {
+    HTreeItem(xmlNodePtr n):  Fl_Tree_Item(p) {
         node = n;
         usericon(SelectedIcon[0]);  //  indices 0, 1, and 2; correspond to not-selected, selected, and tri-state; respectively
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
@@ -93,6 +94,8 @@ class MyTree:   public Fl_Tree
 public:
     xDoc doc;
     int size = 0;   //  number of tree items
+    std::vector<HTreeItem *> items = {};
+    HTreeItem* ToolTipItem = nullptr;
 
     MyTree(xDoc d):   Fl_Tree(10, 10, 380, 380) {
         doc = d;
@@ -124,6 +127,7 @@ public:
             if (!obj.err) {
                 HTreeItem *i = new HTreeItem(node.ptr); size++;
                 item = this->add(path.c_str(), i);
+                items.insert(items.end(), (HTreeItem *) i);
                 
                 auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
                 if (branch.results->type == XPATH_NODESET)
@@ -134,6 +138,8 @@ public:
                 }
             }
     }
+    
+    HTreeItem* at(int index) const {return items[index];}
 
 //  UserAccept
 //| User has indicated with FL_End they accept their choices and exit the program
@@ -162,6 +168,7 @@ public:
                 rc = Fl_Tree::handle(event);
                 it = (HTreeItem*) item_clicked();
                 if (it) {
+                    if (it->event_on_collapse_icon(it->prefs)) return rc;
                     if (it->usericon() == SelectedIcon[0]) {it->SelectBranch(true);}
                     else it->SelectBranch(false);
                     it->FixParent(); it->select(0);}
@@ -172,21 +179,25 @@ public:
             case FL_FOCUS:
             case FL_DRAG:
             case FL_RELEASE:
-            case FL_ENTER:
-            case FL_LEAVE:
                 break;
             case FL_MOVE:
+                if (true) break;
+                if (Fl::event_x() < 0 || Fl::event_y() < 0) break;
                 for (int i = 0; i < size; ++i) {
-                    HTreeItem* item = (HTreeItem*) this->find_item(i);
+                    HTreeItem* item = (HTreeItem*) this->at(i);
                     if (item && Fl::event_x() >= item->x() && Fl::event_x() < item->x() + item->w() &&
-                        Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h()) {
-                        it = item;
-                        break;
-                    }
+                        Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h())
+                            {it = item; break;}
                 }
-                if (! it) break; if (! it->tooltip.length()) break;
-                Fl_Tooltip::enter_area((Fl_Widget*) it, Fl::event_x_root(), Fl::event_y_root(), 600, 50, it->tooltip.c_str());
+                if (!it && !ToolTipItem) break;
+                else if (!it->tooltip.length() && !ToolTipItem) break;
+                else if ( it && !ToolTipItem)   ToolTipItem = it;
+                else if (!it && ToolTipItem)    {Fl_Tooltip::exit((Fl_Widget*) ToolTipItem); ToolTipItem= nullptr; break;}
+
+                Fl_Tooltip::enter_area((Fl_Widget*) ToolTipItem, Fl::event_x(), Fl::event_y(), 200, 20, ToolTipItem->tooltip.c_str());
                 break;
+            case FL_ENTER:
+            case FL_LEAVE:
             case FL_SHORTCUT:
             case FL_SHOW:
             default:
@@ -202,6 +213,27 @@ public:
             result += c;
         }
         return result;
+    }
+};
+
+//  MyWindow class
+//| Extended from Fl_Window  to include the FL_end interupt
+class MyWindow: public Fl_Window
+{
+public:
+    MyTree* tree = 0;
+
+    MyWindow(int w, int h, const char* title= 0):   Fl_Window(w, h, title) {}
+
+    int handle(int event) {
+        switch(event) {
+            case FL_KEYBOARD:
+                if (FL_End == Fl::event_key()) return tree->handle(event);
+                break;
+            default:
+                break;
+        }
+        return Fl_Window::handle(event);
     }
 };
 
@@ -328,9 +360,9 @@ int main(int argc, char *argv[])
         int aw = doc->XML(std::string("new.xml"));
 #endif
         
-        Fl_Window window(400, 400, ArgList["title"].c_str());
+        MyWindow window(400, 400, ArgList["title"].c_str());
         MyTree* tree = new MyTree(*doc); tree->selectmode(FL_TREE_SELECT_MULTI);
-        window.add(tree);
+        window.add(tree); window.tree = tree;
         window.as_group()->resizable((Fl_Choice*) tree);
         window.show();
         Fl::run();
