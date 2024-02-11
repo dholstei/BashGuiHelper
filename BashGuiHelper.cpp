@@ -228,8 +228,8 @@ public:
     int handle(int event) {
         switch(event) {
             case FL_KEYBOARD:
-                if (FL_End == Fl::event_key()) return tree->handle(event);
-                break;
+                if (FL_End == Fl::event_key()) tree->UserAccept((HTreeItem*) tree->first());
+                return 0;
             default:
                 break;
         }
