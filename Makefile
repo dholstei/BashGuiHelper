@@ -11,6 +11,7 @@ endif
 CPP=g++
 CPPFLAGS=$(DEBUG) -std=c++17 -fpermissive -Wno-write-strings
 FLTKPREFIX:=/usr
+FLTKBRANCH:=1.3
 INCLUDES:=-I/usr/include/libxml2
 INCLUDES:=$(INCLUDES) -I$(FLTKPREFIX)/include/FL
 INCLUDES:=$(INCLUDES) -I/usr/include
@@ -26,14 +27,17 @@ else
 	-ldl -lX11 -lXcursor -lXfixes -lXext -lXft -lfontconfig -lXinerama -lXrender
 endif
 ifeq ($(DEBUG),)
-	BINDIR=release
+	BINDIR:=release
 else
-	BINDIR=debug
+	BINDIR:=debug
 endif
 
 all: $(BINDIR)/BashGuiHelper
 
-fltk:
+fltk:	$(FLTKLIB)
+
+$(FLTKLIB):
+	@rm -rf repo/
 	@if ./FLTKInstall.sh wget_fltk ; \
 		then echo "--- FLTK download: Success ---" | $(LOGGER) ;\
 		else echo "--- FLTK download: FAILURE! ---" | $(LOGGER) ; exit 1; fi
@@ -61,7 +65,18 @@ $(BINDIR)/BashGuiHelper:	$(FLTKLIB) $(OBJECTS)
 		then echo "--- Build $@: Success ---" | $(LOGGER) ;\
 		else echo "--- Build $@: FAILURE! ---" | $(LOGGER) ; exit 1; fi
 
+test_tree:	$(BINDIR)/BashGuiHelper
+	$< --type=tree --title="long title" --desc="long desc" --xml=./selection.xml
+
+test_selection:	$(BINDIR)/BashGuiHelper
+	$< --type=selection --title="long title" --desc="long desc" --directory=$$HOME/src --file_type="Image Files (*.png *.jpg *.bmp)" --items="Item 1\tItem 2\tItem 3 and a half"
+
 clean:
-	@if rm -fv release/BashGuiHelper debug/BashGuiHelper *.o;\
+	@if rm -fv release/BashGuiHelper debug/BashGuiHelper *.o && rm -rf repo/;\
+		then echo "--- $@: Success ---" | $(LOGGER) ;\
+		else echo "--- $@: FAILURE! ---" | $(LOGGER) ; exit 1; fi
+
+clean-fltk:
+	@if sudo rm -rf $(FLTKLIB);\
 		then echo "--- $@: Success ---" | $(LOGGER) ;\
 		else echo "--- $@: FAILURE! ---" | $(LOGGER) ; exit 1; fi

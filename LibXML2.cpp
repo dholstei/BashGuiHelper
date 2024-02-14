@@ -7,6 +7,9 @@
 #include <string.h>
 const char* types[] = {"XPATH_UNDEFINED", "XPATH_NODESET", "XPATH_BOOLEAN", "XPATH_NUMBER", "XPATH_STRING", "XPATH_POINT", "XPATH_RANGE", "XPATH_LOCATIONSET", "XPATH_USERS", "XPATH_XSLT_TREE"};
 
+//  ClearChildren(xmlNodePtr parent):   Fast method to clear out children, no freeing of memory
+void ClearChildren(xmlNodePtr parent) {parent->children = nullptr;}
+
 // xNode constructors
 XPathObj::XPathObj(std::variant<xmlDocPtr, xmlNodePtr> n, const xmlChar * str) {
     query = std::string((char*) str); node = n;

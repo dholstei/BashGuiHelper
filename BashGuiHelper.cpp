@@ -41,7 +41,10 @@ Fl_Tree_Prefs p;
 #include "res/not-selected.xpm"
 #include "res/selected.xpm"
 #include "res/tri-state.xpm"
-Fl_Pixmap *SelectedIcon[3];
+#define     NOTSELECTEDXPM  SelectIcon[0]
+#define     SELECTEDXPM     SelectIcon[1]
+#define     TRISTATEXPM     SelectIcon[2]
+Fl_Pixmap *SelectIcon[3];
 
 //  HTreeItem class
 //| Extended from Fl_Tree_Item to include XML tree node for XML operations
@@ -54,7 +57,7 @@ public:
 
     HTreeItem(xmlNodePtr n):  Fl_Tree_Item(p) {
         node = n;
-        usericon(SelectedIcon[0]);  //  indices 0, 1, and 2; correspond to not-selected, selected, and tri-state; respectively
+        usericon(NOTSELECTEDXPM);  //  default to not-selected
         XPathObj obj = XPathObj(node, (xmlChar*) "string(text())");
         if (!obj.err) this->label(obj.Str().c_str());
         obj = XPathObj(node, (xmlChar*) "string(@tip)");
@@ -66,7 +69,7 @@ public:
 //| Item/Branch has been selected, toggle selection icon 
 //| If branch selected, set children selection to parent value
     void SelectBranch(bool sel) {
-        usericon(SelectedIcon[(int) sel]);
+        usericon(SelectIcon[(int) sel]);
         for (size_t i = 0; i < children(); i++) ((HTreeItem*) child(i))->SelectBranch(sel);
     }
 
@@ -77,9 +80,9 @@ public:
         if (!p) return;
         auto icon = ((HTreeItem*) p->child(0))->usericon();
         for (size_t i = 1; i < p->children(); i++) {
-            if (icon == SelectedIcon[2]) break;
+            if (icon == TRISTATEXPM) break;
             if (icon != ((HTreeItem*) p->child(i))->usericon()) {
-                icon = SelectedIcon[2]; break;}
+                icon = TRISTATEXPM; break;}
         };
         p->usericon(icon);
         p->FixParent();
@@ -98,10 +101,11 @@ public:
     HTreeItem* ToolTipItem = nullptr;
 
     MyTree(xDoc d):   Fl_Tree(10, 10, 380, 380) {
+        this->color(FL_BACKGROUND2_COLOR);
         doc = d;
-        SelectedIcon[0] = new Fl_Pixmap(not_selected_xpm);
-        SelectedIcon[1] = new Fl_Pixmap(selected_xpm);
-        SelectedIcon[2] = new Fl_Pixmap(tri_state_xpm);
+        NOTSELECTEDXPM  = new Fl_Pixmap(not_selected_xpm);
+        SELECTEDXPM     = new Fl_Pixmap(selected_xpm);
+        TRISTATEXPM     = new Fl_Pixmap(tri_state_xpm);
         XPathObj n = XPathObj(doc.ptr, (xmlChar*) "/*/*");
         if (n.err)
         {   // turn into macro
@@ -126,7 +130,7 @@ public:
             XPathObj obj = XPathObj(node.ptr, (xmlChar*) "string(text())");
             if (!obj.err) {
                 HTreeItem *i = new HTreeItem(node.ptr); size++;
-                item = this->add(path.c_str(), i);
+                item = this->add(path.c_str(), i); this->close(i, 0);
                 items.insert(items.end(), (HTreeItem *) i);
                 
                 auto branch = XPathObj(node.ptr, (xmlChar*) "./*");
@@ -144,12 +148,17 @@ public:
 //  UserAccept
 //| User has indicated with FL_End they accept their choices and exit the program
 //| Print to stdout XML-formatted selections
-    void UserAccept(HTreeItem* item) {
+    void UserAccept(HTreeItem* item, int ctrl) {
         while (item)
         {
-            if (item->usericon() == SelectedIcon[0])    //  non-obvious check for "not-selected"
+            if (item->usericon() == NOTSELECTEDXPM)    //  non-obvious check for "not-selected"
                {xmlUnlinkNode(item->node);}
-            else {if (item->children()) UserAccept((HTreeItem*) item->child(0));}
+            else if (ctrl && item->usericon() == SELECTEDXPM)
+            {
+                ClearChildren(item->node);
+            }
+            
+            else {if (item->children()) UserAccept((HTreeItem*) item->child(0), ctrl);}
             
             item = (HTreeItem*) next(item);
         }
@@ -169,12 +178,13 @@ public:
                 it = (HTreeItem*) item_clicked();
                 if (it) {
                     if (it->event_on_collapse_icon(it->prefs)) return rc;
-                    if (it->usericon() == SelectedIcon[0]) {it->SelectBranch(true);}
+                    if (it->usericon() == NOTSELECTEDXPM) {it->SelectBranch(true);}
                     else it->SelectBranch(false);
                     it->FixParent(); it->select(0);}
                 return rc;
             case FL_KEYBOARD:
-                if (FL_End == Fl::event_key()) UserAccept((HTreeItem*) first());
+                if (FL_End == Fl::event_key())
+                    UserAccept((HTreeItem*) first(), Fl::event_ctrl());
                 break;
             case FL_FOCUS:
             case FL_DRAG:
@@ -228,7 +238,7 @@ public:
     int handle(int event) {
         switch(event) {
             case FL_KEYBOARD:
-                if (FL_End == Fl::event_key()) tree->UserAccept((HTreeItem*) tree->first());
+                if (FL_End == Fl::event_key()) tree->UserAccept((HTreeItem*) tree->first(), Fl::event_ctrl());
                 return 0;
             default:
                 break;
@@ -239,7 +249,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-    int i=0;
+    int i=0; 
 
     std::map<std::string, std::string> ArgList{};   //  cheap version of argparse
     for (size_t i = 1; i < argc; i++) {
@@ -364,6 +374,7 @@ int main(int argc, char *argv[])
         MyTree* tree = new MyTree(*doc); tree->selectmode(FL_TREE_SELECT_MULTI);
         window.add(tree); window.tree = tree;
         window.as_group()->resizable((Fl_Choice*) tree);
+        window.as_group()->color(FL_BACKGROUND2_COLOR);
         window.show();
         Fl::run();
         CANCELLED();

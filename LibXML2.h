@@ -89,3 +89,7 @@ class XPathObj
       // This error is set when an incompatible data type is retrieved, such as a node set when expecting a floating point
     void SetValError(const char* msg, int type);
 };
+
+
+//  ClearChildren(xmlNodePtr parent):   Fast method to clear out children, no freeing of memory
+void ClearChildren(xmlNodePtr parent);
