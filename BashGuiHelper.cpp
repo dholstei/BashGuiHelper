@@ -165,56 +165,58 @@ public:
         std::cout <<  doc.XML() << "\n"; exit(0);
     }
 
-    int handle(int event) {
-        HTreeItem *it = NULL;
-        int rc;
-        auto reason = callback_reason();
-        if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return Fl_Tree::handle(event);
-        switch(event) {
-            case FL_NO_EVENT:
-                break;
-            case FL_PUSH:
-                rc = Fl_Tree::handle(event);
-                it = (HTreeItem*) item_clicked();
-                if (it) {
-                    if (it->event_on_collapse_icon(it->prefs)) return rc;
-                    if (it->usericon() == NOTSELECTEDXPM) {it->SelectBranch(true);}
-                    else it->SelectBranch(false);
-                    it->FixParent(); it->select(0);}
-                return rc;
-            case FL_KEYBOARD:
-                if (FL_End == Fl::event_key())
-                    UserAccept((HTreeItem*) first(), Fl::event_ctrl());
-                break;
-            case FL_FOCUS:
-            case FL_DRAG:
-            case FL_RELEASE:
-                break;
-            case FL_MOVE:
-                if (true) break;
-                if (Fl::event_x() < 0 || Fl::event_y() < 0) break;
-                for (int i = 0; i < size; ++i) {
-                    HTreeItem* item = (HTreeItem*) this->at(i);
-                    if (item && Fl::event_x() >= item->x() && Fl::event_x() < item->x() + item->w() &&
-                        Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h())
-                            {it = item; break;}
-                }
-                if (!it && !ToolTipItem) break;
-                else if (!it->tooltip.length() && !ToolTipItem) break;
-                else if ( it && !ToolTipItem)   ToolTipItem = it;
-                else if (!it && ToolTipItem)    {Fl_Tooltip::exit((Fl_Widget*) ToolTipItem); ToolTipItem= nullptr; break;}
-
-                Fl_Tooltip::enter_area((Fl_Widget*) ToolTipItem, Fl::event_x(), Fl::event_y(), 200, 20, ToolTipItem->tooltip.c_str());
-                break;
-            case FL_ENTER:
-            case FL_LEAVE:
-            case FL_SHORTCUT:
-            case FL_SHOW:
-            default:
-                break;
-        }
-        return Fl_Tree::handle(event);
+  int handle(int event) {
+    HTreeItem *it = NULL;
+    int rc;
+    auto reason = callback_reason();
+    if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return Fl_Tree::handle(event);
+    switch(event) {
+        case FL_NO_EVENT:
+            break;
+        case FL_PUSH:
+            rc = Fl_Tree::handle(event);
+            it = (HTreeItem*) item_clicked();
+            if (it) {
+                if (it->event_on_collapse_icon(it->prefs)) return rc;
+                if (it->usericon() == NOTSELECTEDXPM) {it->SelectBranch(true);}
+                else it->SelectBranch(false);
+                it->FixParent(); it->select(0);}
+            return rc;
+        case FL_KEYBOARD:
+            if (FL_End == Fl::event_key())
+                UserAccept((HTreeItem*) first(), Fl::event_ctrl());
+            break;
+        case FL_FOCUS:
+        case FL_DRAG:
+        case FL_RELEASE:
+            break;
+        case FL_MOVE:
+            if (Fl::event_x() < 0 || Fl::event_y() < 0) break;
+            for (int i = 0; i < size; ++i) {
+                HTreeItem* item = (HTreeItem*) this->at(i);
+                if(item->tooltip.length() <= 0) continue;
+                if (item && Fl::event_x() >= item->x() && Fl::event_x() < item->x() + item->w() &&
+                    Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h())
+                    {
+                        if(item != ToolTipItem) {
+                            ToolTipItem = item;
+                            Fl_Tooltip::enter_area(this, Fl::event_x(), Fl::event_y() + 10, 100, 100, item->tooltip.c_str());
+                        } 
+                        return Fl_Tree::handle(event);
+                    }
+            }
+            Fl_Tooltip::enter_area(this, 0, 0, 0, 0, "");
+            ToolTipItem = nullptr;
+            break;
+        case FL_ENTER:
+        case FL_LEAVE:
+        case FL_SHORTCUT:
+        case FL_SHOW:
+        default:
+            break;
     }
+    return Fl_Tree::handle(event);
+}
 
     private:std::string escape(const std::string& input) {
         std::string result;
@@ -249,6 +251,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+    Fl_Tooltip::delay(0.2);
     int i=0; 
 
     std::map<std::string, std::string> ArgList{};   //  cheap version of argparse
