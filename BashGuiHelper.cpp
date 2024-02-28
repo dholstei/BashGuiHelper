@@ -191,20 +191,22 @@ public:
             case FL_RELEASE:
                 break;
             case FL_MOVE:
-                if (true) break;
                 if (Fl::event_x() < 0 || Fl::event_y() < 0) break;
                 for (int i = 0; i < size; ++i) {
                     HTreeItem* item = (HTreeItem*) this->at(i);
+                    if(item->tooltip.length() <= 0) continue;
                     if (item && Fl::event_x() >= item->x() && Fl::event_x() < item->x() + item->w() &&
                         Fl::event_y() >= item->y() && Fl::event_y() < item->y() + item->h())
-                            {it = item; break;}
+                        {
+                            if(item != ToolTipItem) {
+                                ToolTipItem = item;
+                                Fl_Tooltip::enter_area(this, Fl::event_x(), Fl::event_y() + 10, 100, 100, item->tooltip.c_str());
+                            } 
+                            return Fl_Tree::handle(event);
+                        }
                 }
-                if (!it && !ToolTipItem) break;
-                else if (!it->tooltip.length() && !ToolTipItem) break;
-                else if ( it && !ToolTipItem)   ToolTipItem = it;
-                else if (!it && ToolTipItem)    {Fl_Tooltip::exit((Fl_Widget*) ToolTipItem); ToolTipItem= nullptr; break;}
-
-                Fl_Tooltip::enter_area((Fl_Widget*) ToolTipItem, Fl::event_x(), Fl::event_y(), 200, 20, ToolTipItem->tooltip.c_str());
+                Fl_Tooltip::enter_area(this, 0, 0, 0, 0, "");
+                ToolTipItem = nullptr;
                 break;
             case FL_ENTER:
             case FL_LEAVE:
@@ -214,7 +216,7 @@ public:
                 break;
         }
         return Fl_Tree::handle(event);
-    }
+}
 
     private:std::string escape(const std::string& input) {
         std::string result;
@@ -249,6 +251,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+    Fl_Tooltip::delay(0.2);
     int i=0; 
 
     std::map<std::string, std::string> ArgList{};   //  cheap version of argparse
