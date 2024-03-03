@@ -219,7 +219,7 @@ int xDoc::XML(std::string filename, const char * txt_encoding) {
     int i = xmlSaveFileEnc(filename.c_str(), ptr, txt_encoding);
     if (i > 0) return i;
     SetError(); return i;}
-
+//  Return document root node
 xNode xDoc::RootNode() {
     return xNode((xmlNodePtr) xmlDocGetRootElement(ptr));}
 
@@ -232,3 +232,7 @@ void xDoc::SetError() {
     if (m->str1) err->data = new std::string(m->str1);
     xmlResetError(m);
 }
+
+//  Unlink node and free memory
+void DelNode(xmlNodePtr n) {
+    xmlUnlinkNode(n);}

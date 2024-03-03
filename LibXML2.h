@@ -50,9 +50,9 @@ class xDoc {
     xDoc(const char * buffer, int size, const char * URL, const char * encoding, int options);
     ~xDoc();
 
-    xNode RootNode();
-    std::string XML(const char * txt_encoding = "UTF-8");  //  Rendered XML document
-    int XML(std::string filename, const char * txt_encoding = "UTF-8");  //  Rendered XML document to file
+    xNode RootNode(); //  Return document root node
+    std::string XML(const char * txt_encoding = "UTF-8");               //  Rendered XML document
+    int XML(std::string filename, const char * txt_encoding = "UTF-8"); //  Rendered XML document to file
 
   private:
     void SetError();
@@ -90,6 +90,4 @@ class XPathObj
     void SetValError(const char* msg, int type);
 };
 
-
-//  ClearChildren(xmlNodePtr parent):   Fast method to clear out children, no freeing of memory
-void ClearChildren(xmlNodePtr parent);
+void DelNode(xmlNodePtr n);                                         //  Unlink node and free memory

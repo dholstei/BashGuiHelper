@@ -54,6 +54,7 @@ public:
     xmlNodePtr  node;
     std::string  tooltip;
     Fl_Tree_Prefs prefs = p;
+    bool ClearNodeOnDel = true;
 
     HTreeItem(xmlNodePtr n):  Fl_Tree_Item(p) {
         node = n;
@@ -63,7 +64,9 @@ public:
         obj = XPathObj(node, (xmlChar*) "string(@tip)");
         if (!obj.err) tooltip = obj.Str();
     }
-    ~HTreeItem(){;}
+    ~HTreeItem(){
+        if (ClearNodeOnDel) DelNode(node);
+        }
 
 //  SelectBranch
 //| Item/Branch has been selected, toggle selection icon 
@@ -143,6 +146,8 @@ public:
             }
     }
     
+    void DelItem(HTreeItem* item) {}
+
     HTreeItem* at(int index) const {return items[index];}
 
 //  UserAccept
