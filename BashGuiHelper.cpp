@@ -173,8 +173,8 @@ public:
     int handle(int event) {
         HTreeItem *it = NULL;
         int rc;
-        auto reason = callback_reason();
-        if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return Fl_Tree::handle(event);
+        // auto reason = callback_reason();
+        // if (reason == FL_TREE_REASON_OPENED || reason == FL_TREE_REASON_CLOSED) return Fl_Tree::handle(event);
         switch(event) {
             case FL_NO_EVENT:
                 break;
